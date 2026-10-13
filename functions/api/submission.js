@@ -1,58 +1,69 @@
-// GET  /api/submission … 自分の送った内容を返す
-// POST /api/submission … 意見と理由を送る（同じ人のぶんは上書き）
+// GET  /api/submission … 自分の 送った ないよう
+// POST /api/submission … なまえ・意見・理由を おくる（同じ ブラウザからは 上書き）
 
-import { json, fail, getUser } from "../_lib/auth.js";
+import { json, fail, getUser, newId, kidCookie } from "../_lib/auth.js";
 
-const MAX_OPINION = 80;
-const MAX_REASON = 300;
+const MAX_NAME = 16;
+const MAX_OPINION = 60;
+const MAX_REASON = 200;
 
-function clean(text, max) {
+function cleanText(text, max) {
   return String(text || "")
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
     .trim()
     .slice(0, max);
 }
 
+function cleanName(text, max) {
+  return cleanText(text, max).replace(/\s+/g, " ");
+}
+
 export async function onRequestGet({ request, env }) {
   const user = await getUser(request, env);
-  if (!user) return fail(401, "ログインしてね", "not_signed_in");
+  if (!user) return json({ ok: true, submission: null });
 
   const row = await env.DB.prepare(
-    "SELECT opinion, reason, created_at FROM submissions WHERE email = ?1"
+    "SELECT name, opinion, reason, created_at FROM submissions WHERE sid = ?1"
   )
-    .bind(user.email)
+    .bind(user.id)
     .first();
 
   return json({ ok: true, submission: row || null });
 }
 
 export async function onRequestPost({ request, env }) {
-  const user = await getUser(request, env);
-  if (!user) return fail(401, "ログインしてね", "not_signed_in");
+  if (!env.SESSION_SECRET) {
+    return fail(500, "サーバーの せってい（SESSION_SECRET）が まだです", "server_not_configured");
+  }
 
   let body;
   try {
     body = await request.json();
-  } catch {
-    return fail(400, "リクエストの形式が正しくありません", "bad_request");
+  } catch (e) {
+    return fail(400, "リクエストの かたちが 正しくありません", "bad_request");
   }
 
-  const opinion = clean(body.opinion, MAX_OPINION);
-  const reason = clean(body.reason, MAX_REASON);
+  const name = cleanName(body.name, MAX_NAME);
+  const opinion = cleanText(body.opinion, MAX_OPINION);
+  const reason = cleanText(body.reason, MAX_REASON);
 
-  if (!opinion) return fail(400, "意見を入れてね", "empty_opinion");
-  if (opinion.length > MAX_OPINION) return fail(400, "意見が長すぎるよ", "opinion_too_long");
-  if (!reason) return fail(400, "理由を入れてね", "empty_reason");
-  if (reason.length > MAX_REASON) return fail(400, "理由が長すぎるよ", "reason_too_long");
+  if (!name) return fail(400, "「なまえ」を 入れてね", "empty_name");
+  if (!opinion) return fail(400, "「意見」を 入れてね", "empty_opinion");
+  if (!reason) return fail(400, "「理由」を 入れてね", "empty_reason");
+
+  const user = (await getUser(request, env)) || { id: newId(), name: name };
 
   await env.DB.prepare(
-    `INSERT INTO submissions (email, name, picture, opinion, reason, created_at)
-     VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'))
-     ON CONFLICT(email) DO UPDATE SET
-       name = ?2, picture = ?3, opinion = ?4, reason = ?5, created_at = datetime('now')`
+    "INSERT INTO submissions (sid, name, opinion, reason, created_at) " +
+      "VALUES (?1, ?2, ?3, ?4, datetime('now')) " +
+      "ON CONFLICT(sid) DO UPDATE SET " +
+      "name = ?2, opinion = ?3, reason = ?4, created_at = datetime('now')"
   )
-    .bind(user.email, user.name, user.picture || "", opinion, reason)
+    .bind(user.id, name, opinion, reason)
     .run();
 
-  return json({ ok: true, submission: { opinion, reason } });
+  return json(
+    { ok: true, name: name, submission: { name: name, opinion: opinion, reason: reason } },
+    { headers: { "set-cookie": await kidCookie(env, { id: user.id, name: name }) } }
+  );
 }

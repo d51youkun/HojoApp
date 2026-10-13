@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --paper:#FCFAF3;
@@ -80,6 +79,16 @@
     display:grid;place-items:center;line-height:1;
   }
   .field.reason .num{background:var(--green);}
+  .field.name .num{background:var(--verm);}
+  input.nametxt{
+    width:100%;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px;color:var(--ink);
+    padding:13px 14px;border:2px solid var(--line);border-radius:13px;background:#FDFEFE;outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input.nametxt::placeholder{color:#A9B8C0;font-weight:500;}
+  input.nametxt:focus{border-color:var(--verm);box-shadow:0 0 0 4px rgba(228,87,61,.13);}
+  .why{margin:0 0 20px;padding:11px 13px;border-radius:12px;background:#F4F8FB;border:1px solid var(--line);font-size:12.5px;line-height:1.8;color:var(--soft);}
+  .why b{color:var(--ink);}
   .lbl .t{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:16.5px;}
   .lbl .sub{font-size:12px;color:var(--soft);margin-left:auto;font-variant-numeric:tabular-nums;}
   textarea{
@@ -176,20 +185,20 @@
     <div class="theme" id="themeText">クラスで 大切にしたいこと</div>
   </div>
 
-  <!-- ログイン前 -->
-  <section class="login" id="loginCard">
-    <h2>まず、ログインしよう</h2>
-    <p>学校の Google アカウントで入ると、先生に<b>きみの名前</b>がわかるようになるよ。</p>
-    <div class="gbtn" id="gbtn"></div>
-    <div id="loginNotice"></div>
-  </section>
-
   <!-- 入力フォーム -->
-  <section class="card" id="formCard" style="display:none">
+  <section class="card" id="formCard">
     <div id="formBody">
-      <div class="field">
+      <div class="field name">
         <div class="lbl">
           <span class="num">1</span>
+          <span class="t">なまえ</span>
+        </div>
+        <input class="nametxt" id="name" type="text" maxlength="16" placeholder="れい：ようへい" autocomplete="off">
+      </div>
+      <p class="why">ここに書いた<b>なまえ</b>は、先生の画面に出ます。ログインはいりません。</p>
+      <div class="field">
+        <div class="lbl">
+          <span class="num">2</span>
           <span class="t">意見</span>
           <span class="sub"><span id="c1">0</span> / <span id="m1">60</span> 字</span>
         </div>
@@ -197,7 +206,7 @@
       </div>
       <div class="field reason">
         <div class="lbl">
-          <span class="num">2</span>
+          <span class="num">3</span>
           <span class="t">その理由</span>
           <span class="sub"><span id="c2">0</span> / <span id="m2">200</span> 字</span>
         </div>
@@ -235,10 +244,9 @@
    設定（ここを書きかえる）
    ========================================================= */
 const CONFIG = {
-  // Google Cloud で作った「クライアントID」を入れる
-  googleClientId: "ここを Google のクライアントID に書きかえる",
   // 聞きたいこと（クラスのテーマ）
   theme: "クラスで 大切にしたいこと",
+  maxName: 16,
   maxOpinion: 60,
   maxReason: 200
 };
@@ -282,6 +290,7 @@ function toast(msg, isError){
 }
 
 /* ---- 文字数 ---- */
+$("name").setAttribute("maxlength", CONFIG.maxName);
 $("opinion").setAttribute("maxlength", CONFIG.maxOpinion);
 $("reason").setAttribute("maxlength", CONFIG.maxReason);
 $("opinion").addEventListener("input", function(){ $("c1").textContent = this.value.length; });
@@ -291,6 +300,10 @@ $("reason").addEventListener("input", function(){ $("c2").textContent = this.val
     // エンターは「改行」として使う。送信は絶対にしない。
     if (e.key === "Enter") e.stopPropagation();
   });
+});
+$("name").addEventListener("keydown", function(e){
+  // なまえの欄で エンターを おしても 送信しない。
+  if (e.key === "Enter") e.preventDefault();
 });
 
 /* ---- API ---- */
@@ -305,27 +318,17 @@ async function api(path, options){
 }
 
 /* ---- 画面の切りかえ ---- */
-function showLogin(){
-  $("loginCard").style.display = "block";
-  $("formCard").style.display = "none";
-  $("whoBox").innerHTML = "";
-}
-function showForm(){
-  $("loginCard").style.display = "none";
-  $("formCard").style.display = "block";
-  if (currentUser){
-    $("whoBox").innerHTML =
-      (currentUser.picture ? '<img class="avatar" src="' + currentUser.picture + '" alt="">' : "") +
-      '<span class="nm"></span>' +
-      '<button class="linkbtn" id="logoutBtn" type="button">ログアウト</button>';
-    $("whoBox").querySelector(".nm").textContent = currentUser.name;
-    $("logoutBtn").addEventListener("click", async function(){
-      await api("/api/logout", { method: "POST" });
-      currentUser = null;
-      showLogin();
-      toast("ログアウトしたよ");
-    });
-  }
+function setWho(name){
+  const box = $("whoBox");
+  if (!name){ box.innerHTML = ""; return; }
+  box.innerHTML = '<span class="nm"></span><button class="linkbtn" id="resetBtn" type="button">名前をクリア</button>';
+  box.querySelector(".nm").textContent = name + " さん";
+  $("resetBtn").addEventListener("click", async function(){
+    await api("/api/logout", { method: "POST" });
+    $("name").value = "";
+    showFormBody("", "", "");
+    toast("名前をクリアしたよ");
+  });
 }
 
 /* ---- 送信ずみの表示 ---- */
@@ -335,16 +338,17 @@ function showSent(sub){
   $("sentOpinion").textContent = sub.opinion;
   $("sentReason").textContent = sub.reason;
 }
-function showFormBody(opinion, reason){
+function showFormBody(name, opinion, reason){
   $("sentBody").classList.remove("on");
   $("formBody").style.display = "block";
+  if (typeof name === "string") $("name").value = name;
   if (typeof opinion === "string") $("opinion").value = opinion;
   if (typeof reason === "string") $("reason").value = reason;
   $("c1").textContent = $("opinion").value.length;
   $("c2").textContent = $("reason").value.length;
 }
 $("editBtn").addEventListener("click", function(){
-  showFormBody($("sentOpinion").textContent, $("sentReason").textContent);
+  showFormBody($("name").value, $("sentOpinion").textContent, $("sentReason").textContent);
   $("opinion").focus();
 });
 
@@ -352,9 +356,11 @@ $("editBtn").addEventListener("click", function(){
 let sending = false;
 $("sendBtn").addEventListener("click", async function(){
   if (sending) return;
+  const name = $("name").value.trim();
   const opinion = $("opinion").value.trim();
   const reason = $("reason").value.trim();
 
+  if (!name){ toast("「なまえ」を入れてね", true); $("name").focus(); return; }
   if (!opinion){ toast("「意見」を入れてね", true); $("opinion").focus(); return; }
   if (!reason){ toast("「理由」を入れてね", true); $("reason").focus(); return; }
 
@@ -366,9 +372,10 @@ $("sendBtn").addEventListener("click", async function(){
   try {
     const r = await api("/api/submission", {
       method: "POST",
-      body: JSON.stringify({ opinion: opinion, reason: reason })
+      body: JSON.stringify({ name: name, opinion: opinion, reason: reason })
     });
     if (r.res.ok && r.data && r.data.ok){
+      setWho(r.data.name || name);
       showSent(r.data.submission);
       toast("おくったよ！");
     } else {
@@ -383,92 +390,29 @@ $("sendBtn").addEventListener("click", async function(){
   }
 });
 
-/* ---- ログインまわり ---- */
-async function checkMe(){
+/* ---- さいしょの読みこみ ---- */
+async function boot(){
   try {
-    const r = await api("/api/me");
-    if (r.data && r.data.signedIn){
-      currentUser = r.data.user;
-      showForm();
-      const mine = await api("/api/submission");
-      if (mine.data && mine.data.submission){
-        $("opinion").value = mine.data.submission.opinion;
-        $("reason").value = mine.data.submission.reason;
-        $("c1").textContent = $("opinion").value.length;
-        $("c2").textContent = $("reason").value.length;
-        showSent(mine.data.submission);
-      } else {
-        showFormBody();
-      }
+    const me = await api("/api/me");
+    if (me.data && me.data.signedIn && me.data.user && me.data.user.name){
+      setWho(me.data.user.name);
+    }
+    const mine = await api("/api/submission");
+    if (mine.res.ok && mine.data && mine.data.submission){
+      const s = mine.data.submission;
+      $("name").value = s.name || "";
+      $("opinion").value = s.opinion || "";
+      $("reason").value = s.reason || "";
+      $("c1").textContent = $("opinion").value.length;
+      $("c2").textContent = $("reason").value.length;
+      showSent(s);
       return;
     }
   } catch (e) {}
-  showLogin();
+  showFormBody();
 }
+window.addEventListener("load", boot);
 
-async function onCredential(response){
-  try {
-    const r = await api("/api/session", {
-      method: "POST",
-      body: JSON.stringify({ credential: response.credential })
-    });
-    if (!r.data || !r.data.ok){
-      toast((r.data && r.data.error) || "ログインできませんでした", true);
-      return;
-    }
-    currentUser = r.data.user;
-    toast("ようこそ、" + currentUser.name + "さん");
-    showForm();
-    showFormBody();
-  } catch (e) {
-    toast("ログインできませんでした", true);
-  }
-}
-
-function initGoogle(){
-  const box = $("gbtn");
-  const notice = $("loginNotice");
-
-  if (!CONFIG.googleClientId || CONFIG.googleClientId.indexOf("ここを") === 0){
-    box.innerHTML = "";
-    notice.innerHTML = '<div class="notice">まだ Google の設定ができていないよ。先生に <code>public/index.html</code> の <code>CONFIG.googleClientId</code> を入れてもらってね。</div>';
-    return;
-  }
-  if (!window.google || !google.accounts || !google.accounts.id){
-    box.innerHTML = "";
-    notice.innerHTML = '<div class="notice">Googleのボタンを読みこめなかったよ。ネットの状態をたしかめて、ページを開きなおしてね。</div>';
-    return;
-  }
-
-  google.accounts.id.initialize({
-    client_id: CONFIG.googleClientId,
-    callback: onCredential,
-    auto_select: false,
-    cancel_on_tap_outside: true,
-    use_fedcm_for_prompt: false
-  });
-  google.accounts.id.renderButton(box, {
-    type: "standard",
-    theme: "outline",
-    size: "large",
-    shape: "pill",
-    text: "signin_with",
-    locale: "ja",
-    logo_alignment: "left"
-  });
-}
-
-window.addEventListener("load", function(){
-  checkMe();
-  let tries = 0;
-  const t = setInterval(function(){
-    tries++;
-    if ((window.google && google.accounts && google.accounts.id) || tries > 40){
-      clearInterval(t);
-      initGoogle();
-    }
-  }, 250);
-});
 </script>
 </body>
 </html>

@@ -4,21 +4,21 @@
 //  1) env.AI（Cloudflare Workers AI）があれば、意味の近さでまとめる（ai.js）
 //  2) 使えない／失敗したときは、文字の並びの近さでまとめる（cluster.js）
 // どちらでまとめたかは method（"ai" / "bigram"）で返す。
+//
+// 見られるのは先生だけ（合言葉の Cookie を持っている人）。
 
-import { json, fail, getUser, isTeacher } from "../_lib/auth.js";
+import { json, fail, isTeacher } from "../_lib/auth.js";
 import { clusterize, medoidLabel } from "../_lib/cluster.js";
 import { ensureVectors } from "../_lib/vectorstore.js";
 import { clusterByVectors, medoidByVectors, DEFAULT_THRESHOLD } from "../_lib/ai.js";
 
 export async function onRequestGet({ request, env }) {
-  const user = await getUser(request, env);
-  if (!user) return fail(401, "ログインしてね", "not_signed_in");
-  if (!isTeacher(user, env)) {
-    return fail(403, "この画面は先生だけが見られます", "not_teacher");
+  if (!(await isTeacher(request, env))) {
+    return fail(401, "合言葉を 入れてね", "need_pass");
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT email, name, picture, opinion, reason, created_at FROM submissions ORDER BY created_at ASC"
+    "SELECT sid, sid AS email, name, opinion, reason, created_at FROM submissions ORDER BY created_at ASC"
   ).all();
   const items = results || [];
 
@@ -59,10 +59,9 @@ export async function onRequestGet({ request, env }) {
       id: "c" + i,
       label: g.label,
       count: g.members.length,
-      members: g.members.map((m) => ({ name: m.name, picture: m.picture || "" })),
+      members: g.members.map((m) => ({ name: m.name })),
       reasons: g.members.map((m) => ({
         name: m.name,
-        picture: m.picture || "",
         reason: m.reason,
         opinion: m.opinion,
       })),

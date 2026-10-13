@@ -1,9 +1,12 @@
-// まる意見：認証まわり（GoogleのIDトークン検証 + セッションCookie）
+// まる意見：セッション（Cookie）まわり
+// ログインは ありません。子どもは「なまえ」を打つだけ。
+// 先生画面は「合言葉（TEACHER_PASS）」で ひらきます。
 // Pages Functions では「_」で始まるフォルダはURLにならないので、共通部品はここに置く。
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
-const COOKIE_NAME = "maru_session";
+const KID_COOKIE = "maru_session";
+const TEACHER_COOKIE = "maru_teacher";
 
 /* ---------- レスポンス補助 ---------- */
 
@@ -22,7 +25,7 @@ export function fail(status, message, code = "") {
   return json({ ok: false, error: message, code }, { status });
 }
 
-/* ---------- base64url 変換 ---------- */
+/* ---------- base64url ---------- */
 
 function b64urlToBytes(s) {
   s = String(s).replace(/-/g, "+").replace(/_/g, "/");
@@ -48,73 +51,7 @@ function b64urlToStr(s) {
   return dec.decode(b64urlToBytes(s));
 }
 
-/* ---------- Google の IDトークン検証 ---------- */
-
-const JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs";
-let jwksCache = { keys: null, exp: 0 };
-
-async function getJwks() {
-  const now = Date.now();
-  if (jwksCache.keys && jwksCache.exp > now) return jwksCache.keys;
-
-  const res = await fetch(JWKS_URL, { cf: { cacheTtl: 3600, cacheEverything: true } });
-  if (!res.ok) throw new Error("jwks_fetch_failed");
-
-  const body = await res.json();
-  const cc = res.headers.get("cache-control") || "";
-  const m = /max-age=(\d+)/.exec(cc);
-  const ttl = m ? parseInt(m[1], 10) * 1000 : 3600 * 1000;
-
-  jwksCache = { keys: body.keys, exp: now + ttl };
-  return body.keys;
-}
-
-/**
- * GoogleのIDトークン（JWT）を検証して、中身を返す。
- * 署名検証までやるので、他人のふりはできない。
- */
-export async function verifyGoogleIdToken(token, clientId) {
-  const parts = String(token || "").split(".");
-  if (parts.length !== 3) throw new Error("bad_token");
-  const [h, p, s] = parts;
-
-  const header = JSON.parse(b64urlToStr(h));
-  const payload = JSON.parse(b64urlToStr(p));
-
-  if (header.alg !== "RS256") throw new Error("bad_alg");
-  if (!clientId || payload.aud !== clientId) throw new Error("bad_aud");
-  if (payload.iss !== "accounts.google.com" && payload.iss !== "https://accounts.google.com") {
-    throw new Error("bad_iss");
-  }
-  if (!payload.exp || payload.exp * 1000 < Date.now() - 60000) throw new Error("expired");
-  const emailVerified = payload.email_verified === true || payload.email_verified === "true";
-  if (!emailVerified) throw new Error("email_unverified");
-  if (!payload.email) throw new Error("no_email");
-
-  const keys = await getJwks();
-  const jwk = keys.find((k) => k.kid === header.kid);
-  if (!jwk) throw new Error("unknown_kid");
-
-  const key = await crypto.subtle.importKey(
-    "jwk",
-    { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: "RS256", ext: true },
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
-
-  const ok = await crypto.subtle.verify(
-    "RSASSA-PKCS1-v1_5",
-    key,
-    b64urlToBytes(s),
-    enc.encode(h + "." + p)
-  );
-  if (!ok) throw new Error("bad_signature");
-
-  return payload;
-}
-
-/* ---------- セッションCookie（HMAC署名つき） ---------- */
+/* ---------- 署名つきトークン（HMAC） ---------- */
 
 async function hmacKey(secret) {
   return crypto.subtle.importKey(
@@ -126,42 +63,38 @@ async function hmacKey(secret) {
   );
 }
 
-export async function createSessionToken(secret, user, days = 30) {
-  const payload = {
-    e: user.email,
-    n: user.name || user.email.split("@")[0],
-    p: user.picture || "",
-    exp: Date.now() + days * 86400000,
-  };
-  const data = strToB64url(JSON.stringify(payload));
+export async function signToken(secret, payload, hours = 24) {
+  const body = Object.assign({}, payload, { exp: Date.now() + hours * 3600000 });
+  const data = strToB64url(JSON.stringify(body));
   const key = await hmacKey(secret);
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
   return data + "." + bytesToB64url(sig);
 }
 
-async function readSessionToken(secret, token) {
+async function readToken(secret, token) {
   const parts = String(token || "").split(".");
   if (parts.length !== 2) return null;
-  const [data, sig] = parts;
   const key = await hmacKey(secret);
-  const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(sig), enc.encode(data));
+  const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(parts[1]), enc.encode(parts[0]));
   if (!ok) return null;
   let payload;
   try {
-    payload = JSON.parse(b64urlToStr(data));
-  } catch {
+    payload = JSON.parse(b64urlToStr(parts[0]));
+  } catch (e) {
     return null;
   }
   if (!payload.exp || payload.exp < Date.now()) return null;
   return payload;
 }
 
-export function sessionCookieHeader(token, maxAgeSeconds = 2592000) {
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
+/* ---------- Cookie ---------- */
+
+export function cookieHeader(name, token, maxAgeSeconds) {
+  return name + "=" + token + "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=" + maxAgeSeconds;
 }
 
-export function clearCookieHeader() {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+export function clearCookieHeader(name) {
+  return name + "=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
 }
 
 export function parseCookies(request) {
@@ -175,22 +108,62 @@ export function parseCookies(request) {
   return out;
 }
 
-/** ログイン中の人を返す。未ログインなら null。 */
-export async function getUser(request, env) {
-  if (!env.SESSION_SECRET) return null;
-  const token = parseCookies(request)[COOKIE_NAME];
-  if (!token) return null;
-  const payload = await readSessionToken(env.SESSION_SECRET, token);
-  if (!payload) return null;
-  return { email: payload.e, name: payload.n, picture: payload.p || "" };
+/* ---------- ざつよう ---------- */
+
+function sameText(a, b) {
+  a = String(a || "");
+  b = String(b || "");
+  if (a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
 }
 
-/** 先生画面を見てよい人かどうか */
-export function isTeacher(user, env) {
-  const list = String(env.TEACHER_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  if (list.length === 0) return true; // 指定なし＝ログインしていればOK
-  return list.includes(String(user.email || "").toLowerCase());
+export function newId() {
+  const a = new Uint8Array(16);
+  crypto.getRandomValues(a);
+  let s = "";
+  for (let i = 0; i < a.length; i++) s += a[i].toString(16).padStart(2, "0");
+  return s;
 }
+
+/* ---------- 子どものセッション（なまえ だけ） ---------- */
+
+export async function getUser(request, env) {
+  if (!env.SESSION_SECRET) return null;
+  const token = parseCookies(request)[KID_COOKIE];
+  if (!token) return null;
+  const p = await readToken(env.SESSION_SECRET, token);
+  if (!p || !p.i) return null;
+  return { id: String(p.i), name: String(p.n || "") };
+}
+
+export async function kidCookie(env, user) {
+  const token = await signToken(env.SESSION_SECRET, { i: user.id, n: user.name }, 24 * 180);
+  return cookieHeader(KID_COOKIE, token, 180 * 86400);
+}
+
+/* ---------- 先生の合言葉 ---------- */
+
+export function checkPass(env, input) {
+  const pass = String(env.TEACHER_PASS || "").trim();
+  if (!pass) return true; // 合言葉を 決めていない ときは ひらいておく
+  return sameText(pass, String(input || "").trim());
+}
+
+export async function isTeacher(request, env) {
+  const pass = String(env.TEACHER_PASS || "").trim();
+  if (!pass) return true;
+  if (!env.SESSION_SECRET) return false;
+  const token = parseCookies(request)[TEACHER_COOKIE];
+  if (!token) return false;
+  const p = await readToken(env.SESSION_SECRET, token);
+  return !!(p && p.t === 1);
+}
+
+export async function teacherCookie(env) {
+  const token = await signToken(env.SESSION_SECRET, { t: 1 }, 24);
+  return cookieHeader(TEACHER_COOKIE, token, 86400);
+}
+
+export const COOKIES = { kid: KID_COOKIE, teacher: TEACHER_COOKIE };

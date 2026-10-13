@@ -9,5 +9,8 @@
     "db:local": "npx wrangler@latest d1 execute maru-iken --local --file=./schema.sql",
     "db:remote": "npx wrangler@latest d1 execute maru-iken --remote --file=./schema.sql"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "wrangler": "^4.136.2"
+  }
 }

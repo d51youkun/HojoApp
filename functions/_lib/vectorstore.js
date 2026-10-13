@@ -14,16 +14,16 @@ export async function ensureVectors(env, items) {
   const keys = items.map((it) => opinionKey(it.opinion));
 
   const { results } = await env.DB.prepare(
-    "SELECT email, opinion_key, model, vector FROM opinion_vectors"
+    "SELECT sid, opinion_key, model, vector FROM opinion_vectors"
   ).all();
   const cached = new Map();
-  (results || []).forEach((r) => cached.set(r.email, r));
+  (results || []).forEach((r) => cached.set(r.sid, r));
 
   const out = new Array(items.length).fill(null);
   const need = [];
 
   items.forEach((it, i) => {
-    const row = cached.get(it.email);
+    const row = cached.get(it.sid);
     if (row && row.opinion_key === keys[i] && row.model === EMBED_MODEL) {
       try {
         const v = JSON.parse(row.vector);
@@ -44,11 +44,11 @@ export async function ensureVectors(env, items) {
 
     const stmts = need.map((idx, k) =>
       env.DB.prepare(
-        `INSERT INTO opinion_vectors (email, opinion_key, model, vector, updated_at)
-         VALUES (?1, ?2, ?3, ?4, datetime('now'))
-         ON CONFLICT(email) DO UPDATE SET
-           opinion_key = ?2, model = ?3, vector = ?4, updated_at = datetime('now')`
-      ).bind(items[idx].email, keys[idx], EMBED_MODEL, JSON.stringify(vecs[k]))
+        "INSERT INTO opinion_vectors (sid, opinion_key, model, vector, updated_at) " +
+          "VALUES (?1, ?2, ?3, ?4, datetime('now')) " +
+          "ON CONFLICT(sid) DO UPDATE SET " +
+          "opinion_key = ?2, model = ?3, vector = ?4, updated_at = datetime('now')"
+      ).bind(items[idx].sid, keys[idx], EMBED_MODEL, JSON.stringify(vecs[k]))
     );
     await env.DB.batch(stmts);
     need.forEach((idx, k) => {
@@ -57,11 +57,11 @@ export async function ensureVectors(env, items) {
   }
 
   // もう送っていない人のベクトルは消す
-  const live = new Set(items.map((it) => it.email));
-  const dead = (results || []).map((r) => r.email).filter((e) => !live.has(e));
+  const live = new Set(items.map((it) => it.sid));
+  const dead = (results || []).map((r) => r.sid).filter((s) => !live.has(s));
   if (dead.length > 0) {
     await env.DB.batch(
-      dead.map((e) => env.DB.prepare("DELETE FROM opinion_vectors WHERE email = ?1").bind(e))
+      dead.map((s) => env.DB.prepare("DELETE FROM opinion_vectors WHERE sid = ?1").bind(s))
     );
   }
 

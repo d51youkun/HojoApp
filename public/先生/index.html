@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --paper:#FCFAF3;
@@ -128,6 +127,17 @@
     background:#FFF6E8;border:1px solid #EBCF9A;color:#7A5A18;}
   .notice code{background:#fff;padding:1px 5px;border-radius:4px;font-size:11.5px;border:1px solid #E3D3B4;}
   .errbox{background:#FDECE9;border-color:#EFB6AA;color:#8C2C17;}
+  .passtxt{
+    width:100%;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px;text-align:center;
+    padding:13px 14px;border:2px solid var(--line);border-radius:13px;background:#FDFEFE;outline:none;margin-bottom:12px;
+  }
+  .passtxt:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(43,108,163,.13);}
+  .go{
+    display:block;width:100%;padding:15px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:18px;
+    color:#fff;background:var(--blue);border:2px solid var(--ink);border-radius:14px;box-shadow:0 5px 0 var(--ink);
+    cursor:pointer;transition:transform .06s, box-shadow .06s;
+  }
+  .go:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink);}
 
   @media (max-width:900px){
     .panel{flex:1 1 100%;border-left:none;border-top:2px solid var(--line);}
@@ -151,8 +161,9 @@
 
   <section class="center" id="gateCard" style="display:none">
     <h2 id="gateTitle">先生用の画面です</h2>
-    <p id="gateMsg">Googleでログインすると、みんなの意見が見られます。</p>
-    <div class="gbtn" id="gbtn"></div>
+    <p id="gateMsg">合言葉を入れると、みんなの意見が見られます。</p>
+    <input class="passtxt" id="pass" type="password" placeholder="合言葉" autocomplete="off">
+    <button class="go" id="goBtn" type="button">ひらく</button>
     <div id="gateNotice"></div>
   </section>
 
@@ -183,7 +194,6 @@
    設定（ここを書きかえる）
    ========================================================= */
 const CONFIG = {
-  googleClientId: "ここを Google のクライアントID に書きかえる",
   refreshMs: 5000
 };
 /* ========================================================= */
@@ -452,8 +462,10 @@ async function loadBoard(){
   const r = await api("/api/board");
   if (!r.res.ok){
     stopAuto();
-    if (r.res.status === 401) { showGate("login"); return; }
-    if (r.res.status === 403) { showGate("noteacher", (r.data && r.data.error) || ""); return; }
+    if (r.res.status === 401 || r.res.status === 403) {
+      showGate((r.data && r.data.error) || "");
+      return;
+    }
     $("liveTxt").textContent = "読みこめませんでした";
     return;
   }
@@ -484,110 +496,58 @@ function startAuto(){
 function stopAuto(){ if (timer){ clearInterval(timer); timer = null; } }
 document.addEventListener("visibilitychange", function(){
   if (document.hidden) stopAuto();
-  else if (currentUser) { loadBoard(); startAuto(); }
+  else if (opened) { loadBoard(); startAuto(); }
 });
 
 /* ---------- 画面 ---------- */
-function showGate(mode, msg){
+let opened = false;
+
+function showGate(msg){
+  opened = false;
   $("main").style.display = "none";
   $("gateCard").style.display = "block";
-  const notice = $("gateNotice");
-  if (mode === "noteacher"){
-    $("gateTitle").textContent = "この画面は先生だけです";
-    $("gateMsg").textContent = "いまログインしているアカウントでは、この画面を見られません。";
-    $("gbtn").innerHTML = "";
-    notice.innerHTML = '<div class="notice errbox">' + (msg ? esc(msg) + "。" : "") + '先生用として登録されているアカウントでログインしなおしてね。ログアウトしてから、もう一度おして。</div>'
-      + '<div style="margin-top:12px;text-align:center"><button class="linkbtn" id="outBtn" type="button">ログアウトする</button></div>';
-    $("outBtn").addEventListener("click", async function(){ await api("/api/logout", { method:"POST" }); location.reload(); });
-    return;
-  }
-  $("gateTitle").textContent = "先生用の画面です";
-  $("gateMsg").textContent = "Googleでログインすると、みんなの意見が見られます。";
-  notice.innerHTML = "";
-  initGoogle();
+  $("gateNotice").innerHTML = msg ? '<div class="notice errbox">' + esc(msg) + '</div>' : "";
+  $("pass").focus();
 }
 
-function setWho(){
+function setWho(label){
   const box = $("whoBox");
-  if (!currentUser){ box.innerHTML = ""; return; }
-  box.innerHTML =
-    (currentUser.picture ? '<img class="avatar" src="' + esc(currentUser.picture) + '" alt="">' : "") +
-    '<span class="nm"></span>' +
-    '<button class="linkbtn" id="logoutBtn" type="button">ログアウト</button>';
-  box.querySelector(".nm").textContent = currentUser.name;
+  if (!label){ box.innerHTML = ""; return; }
+  box.innerHTML = '<span class="nm"></span><button class="linkbtn" id="logoutBtn" type="button">とじる</button>';
+  box.querySelector(".nm").textContent = label;
   $("logoutBtn").addEventListener("click", async function(){
     await api("/api/logout", { method:"POST" });
     location.reload();
   });
 }
 
-async function onCredential(response){
-  const r = await api("/api/session", {
-    method: "POST",
-    body: JSON.stringify({ credential: response.credential })
-  });
+async function openGate(){
+  const pass = $("pass").value.trim();
+  if (!pass){ showGate("合言葉を 入れてね"); return; }
+  const r = await api("/api/teacher", { method:"POST", body: JSON.stringify({ pass: pass }) });
   if (!r.data || !r.data.ok){
-    $("gateNotice").innerHTML = '<div class="notice errbox">' + esc((r.data && r.data.error) || "ログインできませんでした") + '</div>';
+    showGate((r.data && r.data.error) || "合言葉が ちがいます");
     return;
   }
-  currentUser = r.data.user;
-  setWho();
-  await loadBoard();
-  if ($("main").style.display !== "none") startAuto();
+  $("pass").value = "";
+  await boot();
 }
-
-function initGoogle(){
-  if (!CONFIG.googleClientId || CONFIG.googleClientId.indexOf("ここを") === 0){
-    $("gbtn").innerHTML = "";
-    $("gateNotice").innerHTML = '<div class="notice">まだGoogleの設定ができていないよ。<code>public/先生/index.html</code> の <code>CONFIG.googleClientId</code> と、Cloudflare の環境変数 <code>GOOGLE_CLIENT_ID</code> に同じ値を入れてね。</div>';
-    return;
-  }
-  if (!window.google || !google.accounts || !google.accounts.id){
-    $("gbtn").innerHTML = "";
-    $("gateNotice").innerHTML = '<div class="notice">Googleのボタンを読みこめなかったよ。ページを開きなおしてね。</div>';
-    return;
-  }
-  google.accounts.id.initialize({
-    client_id: CONFIG.googleClientId,
-    callback: onCredential,
-    auto_select: false,
-    cancel_on_tap_outside: true,
-    use_fedcm_for_prompt: false
-  });
-  google.accounts.id.renderButton($("gbtn"), {
-    type: "standard", theme: "outline", size: "large",
-    shape: "pill", text: "signin_with", locale: "ja", logo_alignment: "left"
-  });
-}
+$("goBtn").addEventListener("click", openGate);
+$("pass").addEventListener("keydown", function(e){
+  if (e.key === "Enter"){ e.preventDefault(); openGate(); }
+});
 
 async function boot(){
-  let me = null;
-  try {
-    const r = await api("/api/me");
-    if (r.data && r.data.signedIn) me = r.data.user;
-  } catch (e) {}
-
-  if (!me){
-    showGate("login");
-    return;
-  }
-  currentUser = me;
-  setWho();
+  setWho("");
   await loadBoard();
-  if ($("main").style.display !== "none") startAuto();
+  if ($("main").style.display !== "none"){
+    opened = true;
+    setWho("先生");
+    startAuto();
+  }
 }
+window.addEventListener("load", boot);
 
-window.addEventListener("load", function(){
-  boot();
-  let tries = 0;
-  const t = setInterval(function(){
-    tries++;
-    if ((window.google && google.accounts && google.accounts.id) || tries > 40){
-      clearInterval(t);
-      if ($("gateCard").style.display === "block") initGoogle();
-    }
-  }, 250);
-});
 </script>
 </body>
 </html>
