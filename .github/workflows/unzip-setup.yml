@@ -11,7 +11,7 @@
 #
 # 走ったあと：
 #   maru-iken.zip は 自動で 消える。リポジトリ直下に public/ functions/ などが ならぶ。
-#   そのあとは ふつうに push → deploy.yml がデプロイしてくれる。
+#   そのあとは ふつうに push → deploy.yml が デプロイしてくれる。
 
 name: zipをリポジトリに展開（1回だけ）
 

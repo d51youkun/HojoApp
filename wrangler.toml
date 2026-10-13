@@ -1,0 +1,35 @@
+name = "maru-iken"
+# 実行環境が対応している日付にする（未来の日付を書くと、環境によってはじかれる）
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "public"
+
+# D1（データベース）の割り当て。
+# `npx wrangler@latest d1 create maru-iken` を実行すると
+# database_id が表示されるので、下の "ここを..." を書きかえる。
+[[d1_databases]]
+binding = "DB"
+database_name = "maru-iken"
+database_id = "ここを database_id に書きかえる"
+
+[vars]
+# Google の「クライアントID」。public/index.html と public/先生/index.html の
+# CONFIG.googleClientId と同じ値を入れる。
+GOOGLE_CLIENT_ID = "ここを Google のクライアントID に書きかえる"
+
+# SESSION_SECRET は秘密なのでここには書かない。
+# ・ローカル確認 … .dev.vars に書く（.gitignore 済み）
+# ・本番        … Cloudflare ダッシュボード > Settings > Variables and Secrets に
+#                 名前 SESSION_SECRET / 種類 Secret で登録する
+
+# 先生だけが「先生画面」を見られるようにしたいとき、カンマ区切りでメールを書く。
+# 空のままなら「Googleでログインした人なら誰でも」見られる。
+# 例: TEACHER_EMAILS = "sensei@example.com"
+TEACHER_EMAILS = ""
+
+# 意見まとめの「同じ」判定のしきい値（0〜1）。大きいほど きびしく分ける。
+SIMILARITY_THRESHOLD = "0.80"
+
+# Workers AI（意見を「意味」でまとめるのに使う）
+# バインド名は AI なので、コードからは env.AI で使える。
+[ai]
+binding = "AI"

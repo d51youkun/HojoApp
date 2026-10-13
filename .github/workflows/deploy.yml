@@ -1,0 +1,123 @@
+# まる意見：GitHub に push したら Cloudflare Pages に自動デプロイ
+#
+# BlueTalk（bluechat-sync）の deploy-worker.yml と 同じ考え方で作ってある:
+#   ・GitHub Actions から wrangler でデプロイする
+#   ・必要な Cloudflare のリソースは ワークフローの中で 自動でつくる
+#   ・秘密は GitHub の Secrets から渡す（コードにもチャットにも書かない）
+#   ・concurrency で 同時実行を 1つにしぼる
+#
+# 必要なシークレット（GitHub の Settings → Secrets and variables → Actions）:
+#   CLOUDFLARE_API_TOKEN   … Account / Cloudflare Pages / Edit
+#                            これに「D1 / Edit」も足すと、D1 の自動作成と
+#                            schema の適用まで このワークフローで できる
+#   CLOUDFLARE_ACCOUNT_ID  … Cloudflare のアカウントID
+
+name: Deploy maru-iken
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: maru-iken-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # zip で上げた人も、ふつうに上げた人も、同じように動く
+      - name: ソースの場所を決める
+        run: |
+          set -euo pipefail
+          SRC="."
+          if [ -f maru-iken.zip ]; then
+            echo "maru-iken.zip を 展開する"
+            rm -rf _src && mkdir -p _src
+            unzip -q -o maru-iken.zip -d _src
+            cfg="$(find _src -name wrangler.toml | head -1)"
+            test -n "$cfg" || { echo "::error::zip の中に wrangler.toml が ありません"; exit 1; }
+            SRC="$(dirname "$cfg")"
+          fi
+          test -f "$SRC/public/index.html"
+          test -f "$SRC/wrangler.toml"
+          echo "SRC=$SRC" >> "$GITHUB_ENV"
+          echo "使うフォルダ: $SRC"
+
+      - name: 文法チェック（こわれたまま公開しない）
+        run: |
+          set -euo pipefail
+          n=0
+          for f in $(find "$SRC/functions" -name '*.js'); do
+            node --check "$f"
+            n=$((n + 1))
+          done
+          echo "APIのコード $n 本 OK"
+
+      # BlueTalk が KV を自動作成しているのと 同じ考え方を D1 で やる
+      - name: D1 データベースを用意する
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cd "$SRC"
+
+          if ! grep -q "ここを database_id" wrangler.toml; then
+            echo "database_id は もう入っている。スキップする"
+            exit 0
+          fi
+
+          out="$(npx --yes wrangler@4.136.2 d1 create maru-iken 2>&1 || true)"
+          printf '%s\n' "$out"
+          id="$(printf '%s' "$out" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)"
+
+          if [ -z "$id" ]; then
+            echo "::error::D1 を自動作成できませんでした。トークンに「アカウント / D1 / 編集」を足すか、wrangler.toml の database_id を手で入れてください"
+            exit 1
+          fi
+
+          sed -i "s/ここを database_id に書きかえる/${id}/" wrangler.toml
+          echo "database_id = ${id} を 書きこんだ"
+
+      - name: 表をつくる（schema.sql）
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cd "$SRC"
+          npx --yes wrangler@4.136.2 d1 execute maru-iken --remote --file=./schema.sql
+
+      - name: Pages プロジェクトを用意する
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cd "$SRC"
+          npx --yes wrangler@4.136.2 pages project create maru-iken \
+            --production-branch main \
+            || echo "プロジェクトは もう ある。そのまま進む"
+
+      - name: Cloudflare に デプロイ
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          cd "$SRC"
+          npx --yes wrangler@4.136.2 pages deploy public \
+            --project-name=maru-iken \
+            --branch=main

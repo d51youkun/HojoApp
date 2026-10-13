@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まる意見｜こたえをおくろう</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%23E4573D' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%232B6CA3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --paper:#FCFAF3;
+    --grid:#E1EBF1;
+    --grid-bold:#CADCE6;
+    --ink:#22303A;
+    --soft:#657A86;
+    --blue:#2B6CA3;
+    --verm:#E4573D;
+    --green:#3F8F63;
+    --line:#D8E3EA;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-bold) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-bold) 1px, transparent 1px),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    background-position:-1px -1px, -1px -1px, -1px -1px, -1px -1px;
+    min-height:100%;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:22px 16px 64px;}
+
+  /* ---- 上のバー ---- */
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:9px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:21px;letter-spacing:.04em;}
+  .brand svg{display:block;}
+  .who{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft);}
+  .avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--white);object-fit:cover;}
+  .who .nm{font-weight:700;color:var(--ink);}
+  .linkbtn{background:none;border:none;padding:2px 4px;font:inherit;font-size:12.5px;color:var(--soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+  .linkbtn:hover{color:var(--verm);}
+
+  /* ---- タイトル ---- */
+  .hero{margin-bottom:22px;}
+  .hero h1{
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;
+    font-size:clamp(28px,7vw,40px);line-height:1.25;margin:0 0 10px;letter-spacing:.01em;
+  }
+  .hero h1 em{font-style:normal;color:var(--verm);}
+  .hero p{margin:0;color:var(--soft);font-size:14.5px;line-height:1.85;}
+  .theme{
+    display:inline-block;margin-top:14px;padding:7px 15px;border-radius:999px;
+    background:var(--white);border:2px solid var(--blue);color:var(--blue);
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;
+  }
+
+  /* ---- カード ---- */
+  .card{
+    background:var(--white);border:2px solid var(--ink);border-radius:20px;
+    padding:24px 22px 22px;box-shadow:6px 6px 0 var(--ink);
+    margin-bottom:26px;
+  }
+  .field{margin-bottom:22px;}
+  .field:last-of-type{margin-bottom:18px;}
+  .lbl{display:flex;align-items:baseline;gap:10px;margin-bottom:9px;}
+  .lbl .num{
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:15px;
+    width:26px;height:26px;flex:none;border-radius:50%;background:var(--blue);color:#fff;
+    display:grid;place-items:center;line-height:1;
+  }
+  .field.reason .num{background:var(--green);}
+  .lbl .t{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:16.5px;}
+  .lbl .sub{font-size:12px;color:var(--soft);margin-left:auto;font-variant-numeric:tabular-nums;}
+  textarea{
+    width:100%;font-family:inherit;font-size:17px;line-height:1.7;color:var(--ink);
+    padding:13px 14px;border:2px solid var(--line);border-radius:13px;background:#FDFEFE;
+    resize:vertical;outline:none;transition:border-color .15s, box-shadow .15s;
+  }
+  textarea::placeholder{color:#A9B8C0;}
+  textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(43,108,163,.12);}
+  .field.reason textarea:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(63,143,99,.14);}
+
+  .send{
+    display:block;width:100%;padding:17px 20px;margin-top:6px;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;letter-spacing:.06em;
+    color:#fff;background:var(--verm);border:2px solid var(--ink);border-radius:15px;
+    box-shadow:0 6px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+  }
+  .send:hover{background:#D94A30;}
+  .send:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink);}
+  .send:disabled{opacity:.55;cursor:not-allowed;box-shadow:0 6px 0 var(--ink);transform:none;}
+  .send:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+  .hint{margin:12px 0 0;font-size:12.5px;color:var(--soft);line-height:1.7;text-align:center;}
+  .hint b{color:var(--ink);}
+
+  /* ---- 送信後 ---- */
+  .sent{display:none;}
+  .sent.on{display:block;}
+  .senthead{display:flex;align-items:center;gap:9px;margin-bottom:16px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:18px;color:var(--green);}
+  .senthead svg{flex:none;}
+  .quoted{border-left:5px solid var(--line);padding:2px 0 2px 15px;margin:0 0 16px;}
+  .quoted .k{font-size:12px;color:var(--soft);letter-spacing:.08em;margin-bottom:3px;}
+  .quoted .v{font-size:16.5px;line-height:1.8;white-space:pre-wrap;word-break:break-word;}
+  .ghost{
+    width:100%;padding:13px;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;
+    color:var(--ink);background:var(--white);border:2px solid var(--ink);border-radius:13px;
+    box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+  }
+  .ghost:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink);}
+
+  /* ---- ログイン ---- */
+  .login{background:var(--white);border:2px dashed var(--line);border-radius:20px;padding:26px 22px;text-align:center;}
+  .login h2{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:19px;margin:0 0 8px;}
+  .login p{margin:0 0 18px;font-size:13.5px;color:var(--soft);line-height:1.85;}
+  .gbtn{display:flex;justify-content:center;min-height:44px;}
+  .notice{
+    margin-top:16px;padding:12px 14px;border-radius:12px;font-size:12.5px;line-height:1.75;text-align:left;
+    background:#FFF6E8;border:1px solid #EBCF9A;color:#7A5A18;
+  }
+  .notice code{background:#fff;padding:1px 5px;border-radius:4px;font-size:11.5px;border:1px solid #E3D3B4;}
+
+  /* ---- トースト ---- */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);
+    background:var(--ink);color:#fff;padding:14px 26px;border-radius:999px;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;
+    box-shadow:0 10px 26px rgba(34,48,58,.28);transition:transform .32s cubic-bezier(.2,.9,.3,1.3);
+    z-index:50;max-width:90vw;text-align:center;
+  }
+  .toast.on{transform:translate(-50%,0);}
+  .toast.err{background:#B4361F;}
+
+  /* ---- 背景のまる（かざり） ---- */
+  .deco{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:-1;}
+  .deco span{position:absolute;border-radius:50%;opacity:.5;}
+
+  @media (max-width:520px){
+    .card{padding:20px 16px 18px;box-shadow:4px 4px 0 var(--ink);}
+    .wrap{padding:16px 12px 56px;}
+    textarea{font-size:16px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="deco" id="deco"></div>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#E4573D" stroke-width="10"/>
+        <circle cx="50" cy="50" r="15" fill="#2B6CA3"/>
+      </svg>
+      まる意見
+    </div>
+    <div class="who" id="whoBox"></div>
+  </div>
+
+  <div class="hero">
+    <h1>きみの意見を、<em>おくろう。</em></h1>
+    <p>おなじ意見の人が多いほど、先生の画面で<b>まるが大きく</b>なるよ。</p>
+    <div class="theme" id="themeText">クラスで 大切にしたいこと</div>
+  </div>
+
+  <!-- ログイン前 -->
+  <section class="login" id="loginCard">
+    <h2>まず、ログインしよう</h2>
+    <p>学校の Google アカウントで入ると、先生に<b>きみの名前</b>がわかるようになるよ。</p>
+    <div class="gbtn" id="gbtn"></div>
+    <div id="loginNotice"></div>
+  </section>
+
+  <!-- 入力フォーム -->
+  <section class="card" id="formCard" style="display:none">
+    <div id="formBody">
+      <div class="field">
+        <div class="lbl">
+          <span class="num">1</span>
+          <span class="t">意見</span>
+          <span class="sub"><span id="c1">0</span> / <span id="m1">60</span> 字</span>
+        </div>
+        <textarea id="opinion" rows="2" enterkeyhint="enter" placeholder="れい：あいさつを 自分から する" autocomplete="off"></textarea>
+      </div>
+      <div class="field reason">
+        <div class="lbl">
+          <span class="num">2</span>
+          <span class="t">その理由</span>
+          <span class="sub"><span id="c2">0</span> / <span id="m2">200</span> 字</span>
+        </div>
+        <textarea id="reason" rows="4" enterkeyhint="enter" placeholder="れい：言われた人が うれしい気持ちになるから" autocomplete="off"></textarea>
+      </div>
+      <button class="send" id="sendBtn" type="button">送信する</button>
+      <p class="hint">エンターでは送信されません。<b>送信ボタン</b>をおしてね。<br>もう一度送ると、前の内容は上書きされます。</p>
+    </div>
+
+    <div class="sent" id="sentBody">
+      <div class="senthead">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="11" stroke="#3F8F63" stroke-width="2.5"/>
+          <path d="M7 12.5l3.2 3.2L17 9" stroke="#3F8F63" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        送信ずみ！
+      </div>
+      <div class="quoted">
+        <div class="k">意見</div>
+        <div class="v" id="sentOpinion"></div>
+      </div>
+      <div class="quoted" style="border-left-color:#CBE3D7">
+        <div class="k">理由</div>
+        <div class="v" id="sentReason"></div>
+      </div>
+      <button class="ghost" id="editBtn" type="button">書きなおす</button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   設定（ここを書きかえる）
+   ========================================================= */
+const CONFIG = {
+  // Google Cloud で作った「クライアントID」を入れる
+  googleClientId: "ここを Google のクライアントID に書きかえる",
+  // 聞きたいこと（クラスのテーマ）
+  theme: "クラスで 大切にしたいこと",
+  maxOpinion: 60,
+  maxReason: 200
+};
+/* ========================================================= */
+
+const $ = (id) => document.getElementById(id);
+let currentUser = null;
+
+/* ---- かざりのまる ---- */
+(function deco(){
+  const host = $("deco");
+  const spots = [
+    {x:"4%",  y:"12%", s:120, c:"#E4573D", o:.10},
+    {x:"86%", y:"6%",  s:78,  c:"#2B6CA3", o:.12},
+    {x:"78%", y:"72%", s:150, c:"#3F8F63", o:.09},
+    {x:"-2%", y:"70%", s:96,  c:"#7A5AA8", o:.10}
+  ];
+  spots.forEach(function(p){
+    const el = document.createElement("span");
+    el.style.left = p.x; el.style.top = p.y;
+    el.style.width = p.s + "px"; el.style.height = p.s + "px";
+    el.style.background = p.c; el.style.opacity = p.o;
+    host.appendChild(el);
+  });
+})();
+
+$("themeText").textContent = CONFIG.theme;
+$("m1").textContent = CONFIG.maxOpinion;
+$("m2").textContent = CONFIG.maxReason;
+document.title = "まる意見｜" + CONFIG.theme;
+
+/* ---- トースト ---- */
+let toastTimer = null;
+function toast(msg, isError){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.toggle("err", !!isError);
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("on"); }, 2600);
+}
+
+/* ---- 文字数 ---- */
+$("opinion").setAttribute("maxlength", CONFIG.maxOpinion);
+$("reason").setAttribute("maxlength", CONFIG.maxReason);
+$("opinion").addEventListener("input", function(){ $("c1").textContent = this.value.length; });
+$("reason").addEventListener("input", function(){ $("c2").textContent = this.value.length; });
+["opinion","reason"].forEach(function(id){
+  $(id).addEventListener("keydown", function(e){
+    // エンターは「改行」として使う。送信は絶対にしない。
+    if (e.key === "Enter") e.stopPropagation();
+  });
+});
+
+/* ---- API ---- */
+async function api(path, options){
+  const res = await fetch(path, Object.assign({
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin"
+  }, options || {}));
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  return { res: res, data: data };
+}
+
+/* ---- 画面の切りかえ ---- */
+function showLogin(){
+  $("loginCard").style.display = "block";
+  $("formCard").style.display = "none";
+  $("whoBox").innerHTML = "";
+}
+function showForm(){
+  $("loginCard").style.display = "none";
+  $("formCard").style.display = "block";
+  if (currentUser){
+    $("whoBox").innerHTML =
+      (currentUser.picture ? '<img class="avatar" src="' + currentUser.picture + '" alt="">' : "") +
+      '<span class="nm"></span>' +
+      '<button class="linkbtn" id="logoutBtn" type="button">ログアウト</button>';
+    $("whoBox").querySelector(".nm").textContent = currentUser.name;
+    $("logoutBtn").addEventListener("click", async function(){
+      await api("/api/logout", { method: "POST" });
+      currentUser = null;
+      showLogin();
+      toast("ログアウトしたよ");
+    });
+  }
+}
+
+/* ---- 送信ずみの表示 ---- */
+function showSent(sub){
+  $("formBody").style.display = "none";
+  $("sentBody").classList.add("on");
+  $("sentOpinion").textContent = sub.opinion;
+  $("sentReason").textContent = sub.reason;
+}
+function showFormBody(opinion, reason){
+  $("sentBody").classList.remove("on");
+  $("formBody").style.display = "block";
+  if (typeof opinion === "string") $("opinion").value = opinion;
+  if (typeof reason === "string") $("reason").value = reason;
+  $("c1").textContent = $("opinion").value.length;
+  $("c2").textContent = $("reason").value.length;
+}
+$("editBtn").addEventListener("click", function(){
+  showFormBody($("sentOpinion").textContent, $("sentReason").textContent);
+  $("opinion").focus();
+});
+
+/* ---- 送信 ---- */
+let sending = false;
+$("sendBtn").addEventListener("click", async function(){
+  if (sending) return;
+  const opinion = $("opinion").value.trim();
+  const reason = $("reason").value.trim();
+
+  if (!opinion){ toast("「意見」を入れてね", true); $("opinion").focus(); return; }
+  if (!reason){ toast("「理由」を入れてね", true); $("reason").focus(); return; }
+
+  sending = true;
+  const btn = $("sendBtn");
+  btn.disabled = true;
+  btn.textContent = "送信中…";
+
+  try {
+    const r = await api("/api/submission", {
+      method: "POST",
+      body: JSON.stringify({ opinion: opinion, reason: reason })
+    });
+    if (r.res.ok && r.data && r.data.ok){
+      showSent(r.data.submission);
+      toast("おくったよ！");
+    } else {
+      toast((r.data && r.data.error) || "送れませんでした", true);
+    }
+  } catch (e) {
+    toast("つながりませんでした。あとで ためしてね", true);
+  } finally {
+    sending = false;
+    btn.disabled = false;
+    btn.textContent = "送信する";
+  }
+});
+
+/* ---- ログインまわり ---- */
+async function checkMe(){
+  try {
+    const r = await api("/api/me");
+    if (r.data && r.data.signedIn){
+      currentUser = r.data.user;
+      showForm();
+      const mine = await api("/api/submission");
+      if (mine.data && mine.data.submission){
+        $("opinion").value = mine.data.submission.opinion;
+        $("reason").value = mine.data.submission.reason;
+        $("c1").textContent = $("opinion").value.length;
+        $("c2").textContent = $("reason").value.length;
+        showSent(mine.data.submission);
+      } else {
+        showFormBody();
+      }
+      return;
+    }
+  } catch (e) {}
+  showLogin();
+}
+
+async function onCredential(response){
+  try {
+    const r = await api("/api/session", {
+      method: "POST",
+      body: JSON.stringify({ credential: response.credential })
+    });
+    if (!r.data || !r.data.ok){
+      toast((r.data && r.data.error) || "ログインできませんでした", true);
+      return;
+    }
+    currentUser = r.data.user;
+    toast("ようこそ、" + currentUser.name + "さん");
+    showForm();
+    showFormBody();
+  } catch (e) {
+    toast("ログインできませんでした", true);
+  }
+}
+
+function initGoogle(){
+  const box = $("gbtn");
+  const notice = $("loginNotice");
+
+  if (!CONFIG.googleClientId || CONFIG.googleClientId.indexOf("ここを") === 0){
+    box.innerHTML = "";
+    notice.innerHTML = '<div class="notice">まだ Google の設定ができていないよ。先生に <code>public/index.html</code> の <code>CONFIG.googleClientId</code> を入れてもらってね。</div>';
+    return;
+  }
+  if (!window.google || !google.accounts || !google.accounts.id){
+    box.innerHTML = "";
+    notice.innerHTML = '<div class="notice">Googleのボタンを読みこめなかったよ。ネットの状態をたしかめて、ページを開きなおしてね。</div>';
+    return;
+  }
+
+  google.accounts.id.initialize({
+    client_id: CONFIG.googleClientId,
+    callback: onCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true,
+    use_fedcm_for_prompt: false
+  });
+  google.accounts.id.renderButton(box, {
+    type: "standard",
+    theme: "outline",
+    size: "large",
+    shape: "pill",
+    text: "signin_with",
+    locale: "ja",
+    logo_alignment: "left"
+  });
+}
+
+window.addEventListener("load", function(){
+  checkMe();
+  let tries = 0;
+  const t = setInterval(function(){
+    tries++;
+    if ((window.google && google.accounts && google.accounts.id) || tries > 40){
+      clearInterval(t);
+      initGoogle();
+    }
+  }, 250);
+});
+</script>
+</body>
+</html>

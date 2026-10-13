@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まる意見｜先生用</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%232B6CA3' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23E4573D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --paper:#FCFAF3;
+    --grid:#E1EBF1;
+    --grid-bold:#CADCE6;
+    --ink:#22303A;
+    --soft:#657A86;
+    --blue:#2B6CA3;
+    --verm:#E4573D;
+    --green:#3F8F63;
+    --purple:#7A5AA8;
+    --gold:#C9922B;
+    --line:#D8E3EA;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-bold) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-bold) 1px, transparent 1px),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    background-position:-1px -1px, -1px -1px, -1px -1px, -1px -1px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:20px 16px 60px;}
+
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
+  .brand{display:flex;align-items:center;gap:9px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;}
+  .tag{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:12px;background:var(--blue);color:#fff;padding:3px 11px;border-radius:999px;}
+  .who{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft);}
+  .avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--white);object-fit:cover;}
+  .who .nm{font-weight:700;color:var(--ink);}
+  .linkbtn{background:none;border:none;padding:2px 4px;font:inherit;font-size:12.5px;color:var(--soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+  .linkbtn:hover{color:var(--verm);}
+
+  /* ---- 数字 ---- */
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .stat{
+    background:var(--white);border:2px solid var(--ink);border-radius:14px;padding:11px 18px;
+    box-shadow:4px 4px 0 var(--ink);min-width:118px;
+  }
+  .stat .k{font-size:11.5px;color:var(--soft);letter-spacing:.08em;margin-bottom:2px;}
+  .stat .v{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .stat .v small{font-size:13px;font-weight:700;margin-left:2px;}
+  .stat.wide{min-width:auto;}
+
+  /* ---- 盤面 ---- */
+  .board{
+    background:var(--white);border:2px solid var(--ink);border-radius:20px;
+    box-shadow:6px 6px 0 var(--ink);overflow:hidden;
+  }
+  .boardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-bottom:2px solid var(--ink);flex-wrap:wrap;}
+  .boardhead .t{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:15.5px;}
+  .boardhead .t span{color:var(--soft);font-weight:500;font-size:12.5px;margin-left:8px;}
+  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--soft);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+  .boardbody{display:flex;flex-wrap:wrap;}
+  .canvas{flex:1 1 620px;min-width:0;padding:8px;}
+  svg.scene{display:block;width:100%;height:auto;}
+
+  .bubble circle.ring{transition:opacity .15s, filter .15s;}
+  .bubble{cursor:pointer;}
+  .bubble:hover circle.ring{filter:brightness(.94);}
+  .bubble.sel circle.ring{stroke-width:5;}
+  .bubble text{pointer-events:none;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;dominant-baseline:middle;text-anchor:middle;}
+  .bubble .cnt{font-weight:700;opacity:.85;}
+  .bubble:focus{outline:none;}
+  .bubble:focus-visible circle.ring{stroke-width:6;stroke-dasharray:none;}
+  .bubble{touch-action:manipulation;}
+
+  /* ---- 詳細パネル ---- */
+  .panel{
+    flex:0 0 330px;border-left:2px solid var(--line);padding:18px 18px 20px;min-width:0;
+    background:#FBFDFE;
+  }
+  .panel .empty{color:var(--soft);font-size:13px;line-height:1.9;padding-top:26px;text-align:center;}
+  .phead{margin-bottom:13px;}
+  .phead .cap{font-size:11.5px;color:var(--soft);letter-spacing:.08em;margin-bottom:5px;}
+  .phead .txt{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:19px;line-height:1.45;word-break:break-word;}
+  .phead .meta{font-size:12.5px;color:var(--soft);margin-top:7px;}
+  .phead .meta b{color:var(--verm);font-size:15px;font-family:'Zen Maru Gothic',sans-serif;}
+  .tabs{display:flex;gap:6px;margin-bottom:13px;border-bottom:2px solid var(--line);}
+  .tab{
+    flex:1;padding:9px 6px;border:none;background:none;font-family:'Zen Maru Gothic',sans-serif;
+    font-weight:700;font-size:13.5px;color:var(--soft);cursor:pointer;border-bottom:3px solid transparent;
+    margin-bottom:-2px;
+  }
+  .tab.on{color:var(--ink);border-bottom-color:var(--verm);}
+  .tab .n{font-size:11.5px;opacity:.75;margin-left:4px;}
+  .list{max-height:430px;overflow-y:auto;padding-right:4px;}
+  .row{display:flex;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:flex-start;}
+  .row:last-child{border-bottom:none;}
+  .row .avatar{width:28px;height:28px;flex:none;border-width:2px;}
+  .row .ini{
+    width:28px;height:28px;flex:none;border-radius:50%;background:var(--blue);color:#fff;
+    display:grid;place-items:center;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13px;
+  }
+  .row .body{min-width:0;flex:1;}
+  .row .nm{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;}
+  .row .rs{font-size:13px;line-height:1.75;color:#3A4B56;margin-top:3px;white-space:pre-wrap;word-break:break-word;}
+  .row .op{font-size:11.5px;color:var(--soft);margin-top:4px;}
+
+  /* ---- 状態画面 ---- */
+  .center{max-width:460px;margin:60px auto;background:var(--white);border:2px solid var(--ink);border-radius:20px;
+    box-shadow:6px 6px 0 var(--ink);padding:32px 26px;text-align:center;}
+  .center h2{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;margin:0 0 10px;}
+  .center p{margin:0 0 20px;font-size:13.5px;color:var(--soft);line-height:1.9;}
+  .gbtn{display:flex;justify-content:center;min-height:44px;}
+  .notice{margin-top:16px;padding:12px 14px;border-radius:12px;font-size:12.5px;line-height:1.75;text-align:left;
+    background:#FFF6E8;border:1px solid #EBCF9A;color:#7A5A18;}
+  .notice code{background:#fff;padding:1px 5px;border-radius:4px;font-size:11.5px;border:1px solid #E3D3B4;}
+  .errbox{background:#FDECE9;border-color:#EFB6AA;color:#8C2C17;}
+
+  @media (max-width:900px){
+    .panel{flex:1 1 100%;border-left:none;border-top:2px solid var(--line);}
+    .list{max-height:none;}
+  }
+  @media (prefers-reduced-motion:reduce){ *{animation:none !important;transition:none !important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#2B6CA3" stroke-width="10"/>
+        <circle cx="50" cy="50" r="15" fill="#E4573D"/>
+      </svg>
+      まる意見 <span class="tag">先生用</span>
+    </div>
+    <div class="who" id="whoBox"></div>
+  </div>
+
+  <section class="center" id="gateCard" style="display:none">
+    <h2 id="gateTitle">先生用の画面です</h2>
+    <p id="gateMsg">Googleでログインすると、みんなの意見が見られます。</p>
+    <div class="gbtn" id="gbtn"></div>
+    <div id="gateNotice"></div>
+  </section>
+
+  <section id="main" style="display:none">
+    <div class="stats">
+      <div class="stat"><div class="k">おくった人</div><div class="v"><span id="sTotal">0</span><small>人</small></div></div>
+      <div class="stat"><div class="k">意見のまとまり</div><div class="v"><span id="sClusters">0</span><small>こ</small></div></div>
+      <div class="stat wide"><div class="k">さいしん</div><div class="v" style="font-size:17px;padding-top:5px" id="sTime">—</div></div>
+    </div>
+
+    <div class="board">
+      <div class="boardhead">
+        <div class="t">同じ意見ほど、まるが大きい <span>まるをおすと、名前と理由が見られるよ</span></div>
+        <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
+      </div>
+      <div class="boardbody">
+        <div class="canvas" id="canvas"></div>
+        <aside class="panel" id="panel">
+          <div class="empty">まだ まるが えらばれていないよ。<br>左の まるを おしてね。</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   設定（ここを書きかえる）
+   ========================================================= */
+const CONFIG = {
+  googleClientId: "ここを Google のクライアントID に書きかえる",
+  refreshMs: 5000
+};
+/* ========================================================= */
+
+const $ = (id) => document.getElementById(id);
+const VBW = 1000, VBH = 660;
+
+const PALETTE = [
+  {fill:"#FBE4DE", stroke:"#C8452C"},
+  {fill:"#DDEAF4", stroke:"#235A88"},
+  {fill:"#DDEEDF", stroke:"#2F7550"},
+  {fill:"#E8E2F3", stroke:"#63459B"},
+  {fill:"#F8EBCB", stroke:"#A8781F"}
+];
+
+let clusters = [];
+let selectedId = null;
+let activeTab = "people";
+let currentUser = null;
+let timer = null;
+
+/* ---------- 小物 ---------- */
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function svgEsc(s){ return esc(s); }
+function initial(name){
+  const n = String(name || "?").trim();
+  return n ? n.slice(0,1) : "?";
+}
+
+/* ---------- 丸の配置（すきまなく ならべる） ---------- */
+function spiralPack(radii, W, H, margin){
+  const order = radii.map(function(r,i){ return {r:r, i:i}; }).sort(function(a,b){ return b.r - a.r; });
+  const pos = new Array(radii.length);
+  const placed = [];
+  const cx = W/2, cy = H/2;
+
+  for (let k = 0; k < order.length; k++){
+    const item = order[k];
+    const r = item.r;
+    let hit = false;
+
+    if (placed.length === 0){
+      pos[item.i] = { x: cx, y: cy };
+      placed.push({ x: cx, y: cy, r: r });
+      continue;
+    }
+
+    for (let t = 0; t < 6000 && !hit; t++){
+      const rad = 0.85 * Math.sqrt(t) * (t < 30 ? 5 : 4);
+      const ang = t * 0.62;
+      const x = cx + rad * Math.cos(ang);
+      const y = cy + rad * Math.sin(ang) * 0.74;
+      if (x - r < margin || x + r > W - margin || y - r < margin || y + r > H - margin) continue;
+      let clear = true;
+      for (let p = 0; p < placed.length; p++){
+        const q = placed[p];
+        const dx = q.x - x, dy = q.y - y;
+        if (dx*dx + dy*dy < (q.r + r + 4) * (q.r + r + 4)) { clear = false; break; }
+      }
+      if (clear){
+        pos[item.i] = { x: x, y: y };
+        placed.push({ x: x, y: y, r: r });
+        hit = true;
+      }
+    }
+    if (!hit) return null;
+  }
+  return pos;
+}
+
+function gridPack(radii, W, H){
+  const cols = Math.ceil(Math.sqrt(radii.length * (W/H)));
+  const rows = Math.ceil(radii.length / cols);
+  const cw = W / cols, ch = H / rows;
+  return radii.map(function(r, i){
+    const c = i % cols, ro = Math.floor(i / cols);
+    return { x: cw*(c+0.5), y: ch*(ro+0.5) };
+  });
+}
+
+function layout(n, counts){
+  const W = VBW, H = VBH;
+  const sum = counts.reduce(function(a,b){ return a + b; }, 0);
+  const target = 0.40 * W * H;
+  const k = Math.sqrt(target / (Math.PI * sum));
+
+  let radii = counts.map(function(v){ return Math.max(42, k * Math.sqrt(v)); });
+  let pos = null;
+
+  for (let attempt = 0; attempt < 14; attempt++){
+    pos = spiralPack(radii, W, H, 12);
+    if (pos) break;
+    radii = radii.map(function(r){ return r * 0.92; });
+  }
+  if (!pos){ radii = radii.map(function(r){ return Math.max(36, r * 0.7); }); pos = gridPack(radii, W, H); }
+
+  // 文字が小さくなりすぎないよう、全体を上にスケールして はみ出さない分だけ使う
+  let maxX = 0, maxY = 0, minX = W, minY = H;
+  pos.forEach(function(p, i){
+    maxX = Math.max(maxX, p.x + radii[i]); minX = Math.min(minX, p.x - radii[i]);
+    maxY = Math.max(maxY, p.y + radii[i]); minY = Math.min(minY, p.y - radii[i]);
+  });
+  const sx = (W - 20) / Math.max(1, maxX - minX);
+  const sy = (H - 20) / Math.max(1, maxY - minY);
+  const s = Math.min(1.35, sx, sy);
+  if (s !== 1){
+    radii = radii.map(function(r){ return r * s; });
+    pos = pos.map(function(p){ return { x: (p.x - minX) * s + 10, y: (p.y - minY) * s + 10 }; });
+  }
+  return { radii: radii, pos: pos };
+}
+
+/* ---------- 文字を おる ---------- */
+function wrap(text, fontSize, maxWidth, maxLines){
+  const perChar = fontSize;
+  const perLine = Math.max(2, Math.floor(maxWidth / perChar));
+  const chars = Array.from(String(text || ""));
+  const lines = [];
+  let cur = "";
+  for (let i = 0; i < chars.length; i++){
+    cur += chars[i];
+    if (cur.length >= perLine){ lines.push(cur); cur = ""; if (lines.length === maxLines) break; }
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  if (lines.length === 0) lines.push("");
+  const used = lines.join("").length;
+  if (used < chars.length){
+    const last = lines[lines.length - 1];
+    lines[lines.length - 1] = last.slice(0, Math.max(1, last.length - 1)) + "…";
+  }
+  return lines;
+}
+
+/* ---------- えがく ---------- */
+function render(){
+  const host = $("canvas");
+  if (!clusters.length){
+    host.innerHTML = '<div style="padding:70px 20px;text-align:center;color:#657A86;font-size:14px;line-height:2">'
+      + 'まだ 意見が あつまっていないよ。<br>子どもたちが おくると、ここに まるが 出るよ。</div>';
+    return;
+  }
+
+  const counts = clusters.map(function(c){ return Math.max(1, c.count); });
+  const L = layout(clusters.length, counts);
+  const radii = L.radii, pos = L.pos;
+
+  let out = '';
+  out += '<svg class="scene" viewBox="0 0 ' + VBW + ' ' + VBH + '" role="list" aria-label="意見のまとまり">';
+  out += '<defs><filter id="hand" x="-12%" y="-12%" width="124%" height="124%">'
+      +  '<feTurbulence type="fractalNoise" baseFrequency="0.021" numOctaves="2" seed="11" result="n"/>'
+      +  '<feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>'
+      +  '</filter></defs>';
+
+  for (let i = 0; i < clusters.length; i++){
+    const c = clusters[i];
+    const r = radii[i];
+    const p = pos[i];
+    const col = PALETTE[i % PALETTE.length];
+    const isSel = c.id === selectedId;
+
+    const labelSize = Math.max(13.5, Math.min(30, r * 0.235));
+    const maxW = r * 1.62;
+    const maxLines = r > 74 ? 3 : (r > 46 ? 2 : 1);
+    const lines = wrap(c.label, labelSize, maxW, maxLines);
+    const lineH = labelSize * 1.22;
+    const cntText = c.count + "人";
+    const cntSize = Math.max(12, Math.min(20, r * 0.17));
+
+    const blockH = lines.length * lineH + cntSize * 1.5;
+    let y0 = p.y - blockH / 2 + lineH * 0.62;
+
+    out += '<g class="bubble' + (isSel ? ' sel' : '') + '" data-id="' + c.id + '" tabindex="0" role="listitem" '
+        +  'aria-label="' + svgEsc(c.label + "、" + c.count + "人") + '" transform="translate(' + p.x.toFixed(1) + ',' + p.y.toFixed(1) + ')">';
+    out += '<circle class="ring" r="' + r.toFixed(1) + '" fill="' + col.fill + '" stroke="' + col.stroke + '" stroke-width="' + (isSel ? 5 : 3) + '" filter="url(#hand)"/>';
+    for (let li = 0; li < lines.length; li++){
+      out += '<text x="0" y="' + (y0 - p.y + li * lineH).toFixed(1) + '" font-size="' + labelSize.toFixed(1) + '" fill="' + col.stroke + '">'
+          + svgEsc(lines[li]) + '</text>';
+    }
+    out += '<text class="cnt" x="0" y="' + (y0 - p.y + lines.length * lineH + cntSize * 0.55).toFixed(1) + '" '
+        +  'font-size="' + cntSize.toFixed(1) + '" fill="' + col.stroke + '">' + svgEsc(cntText) + '</text>';
+    out += '</g>';
+  }
+  out += '</svg>';
+  host.innerHTML = out;
+
+  Array.prototype.forEach.call(host.querySelectorAll(".bubble"), function(el){
+    el.addEventListener("click", function(){ select(el.getAttribute("data-id")); });
+    el.addEventListener("keydown", function(e){
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); select(el.getAttribute("data-id")); }
+    });
+  });
+}
+
+/* ---------- 詳細パネル ---------- */
+function select(id){
+  selectedId = id;
+  render();
+  drawPanel();
+}
+
+function drawPanel(){
+  const panel = $("panel");
+  const c = clusters.filter(function(x){ return x.id === selectedId; })[0];
+  if (!c){
+    panel.innerHTML = '<div class="empty">まだ まるが えらばれていないよ。<br>左の まるを おしてね。</div>';
+    return;
+  }
+
+  let html = '<div class="phead">'
+    + '<div class="cap">意見</div>'
+    + '<div class="txt">' + esc(c.label) + '</div>'
+    + '<div class="meta">おなじ意見 <b>' + c.count + '</b> 人</div>'
+    + '</div>';
+
+  html += '<div class="tabs">'
+    + '<button class="tab' + (activeTab === "people" ? " on" : "") + '" data-tab="people" type="button">名前<span class="n">' + c.count + '</span></button>'
+    + '<button class="tab' + (activeTab === "reasons" ? " on" : "") + '" data-tab="reasons" type="button">理由<span class="n">' + c.count + '</span></button>'
+    + '</div>';
+
+  html += '<div class="list">';
+  if (activeTab === "people"){
+    c.members.forEach(function(m){
+      html += '<div class="row">'
+        + (m.picture ? '<img class="avatar" src="' + esc(m.picture) + '" alt="">' : '<div class="ini">' + esc(initial(m.name)) + '</div>')
+        + '<div class="body"><div class="nm">' + esc(m.name) + '</div></div>'
+        + '</div>';
+    });
+  } else {
+    c.reasons.forEach(function(r){
+      html += '<div class="row">'
+        + (r.picture ? '<img class="avatar" src="' + esc(r.picture) + '" alt="">' : '<div class="ini">' + esc(initial(r.name)) + '</div>')
+        + '<div class="body">'
+        + '<div class="nm">' + esc(r.name) + '</div>'
+        + '<div class="rs">' + esc(r.reason) + '</div>'
+        + (String(r.opinion) !== String(c.label) ? '<div class="op">意見：' + esc(r.opinion) + '</div>' : '')
+        + '</div></div>';
+    });
+  }
+  html += '</div>';
+  panel.innerHTML = html;
+
+  Array.prototype.forEach.call(panel.querySelectorAll(".tab"), function(btn){
+    btn.addEventListener("click", function(){
+      activeTab = btn.getAttribute("data-tab");
+      drawPanel();
+    });
+  });
+}
+
+/* ---------- データ ---------- */
+async function api(path, options){
+  const res = await fetch(path, Object.assign({
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin"
+  }, options || {}));
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  return { res: res, data: data };
+}
+
+async function loadBoard(){
+  const r = await api("/api/board");
+  if (!r.res.ok){
+    stopAuto();
+    if (r.res.status === 401) { showGate("login"); return; }
+    if (r.res.status === 403) { showGate("noteacher", (r.data && r.data.error) || ""); return; }
+    $("liveTxt").textContent = "読みこめませんでした";
+    return;
+  }
+  const d = r.data;
+
+  const scrollTop = $("panel").scrollTop;
+  clusters = d.clusters || [];
+  if (selectedId && !clusters.some(function(c){ return c.id === selectedId; })) selectedId = null;
+
+  $("sTotal").textContent = d.total;
+  $("sClusters").textContent = d.clusterCount;
+  $("sTime").textContent = new Date(d.updatedAt).toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+  $("liveTxt").textContent = d.method === "ai"
+    ? "AIで まとめ中（にている度 " + d.threshold + "）"
+    : "文字で まとめ中";
+
+  render();
+  drawPanel();
+  $("panel").scrollTop = scrollTop;
+  $("main").style.display = "block";
+  $("gateCard").style.display = "none";
+}
+
+function startAuto(){
+  stopAuto();
+  timer = setInterval(loadBoard, CONFIG.refreshMs);
+}
+function stopAuto(){ if (timer){ clearInterval(timer); timer = null; } }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden) stopAuto();
+  else if (currentUser) { loadBoard(); startAuto(); }
+});
+
+/* ---------- 画面 ---------- */
+function showGate(mode, msg){
+  $("main").style.display = "none";
+  $("gateCard").style.display = "block";
+  const notice = $("gateNotice");
+  if (mode === "noteacher"){
+    $("gateTitle").textContent = "この画面は先生だけです";
+    $("gateMsg").textContent = "いまログインしているアカウントでは、この画面を見られません。";
+    $("gbtn").innerHTML = "";
+    notice.innerHTML = '<div class="notice errbox">' + (msg ? esc(msg) + "。" : "") + '先生用として登録されているアカウントでログインしなおしてね。ログアウトしてから、もう一度おして。</div>'
+      + '<div style="margin-top:12px;text-align:center"><button class="linkbtn" id="outBtn" type="button">ログアウトする</button></div>';
+    $("outBtn").addEventListener("click", async function(){ await api("/api/logout", { method:"POST" }); location.reload(); });
+    return;
+  }
+  $("gateTitle").textContent = "先生用の画面です";
+  $("gateMsg").textContent = "Googleでログインすると、みんなの意見が見られます。";
+  notice.innerHTML = "";
+  initGoogle();
+}
+
+function setWho(){
+  const box = $("whoBox");
+  if (!currentUser){ box.innerHTML = ""; return; }
+  box.innerHTML =
+    (currentUser.picture ? '<img class="avatar" src="' + esc(currentUser.picture) + '" alt="">' : "") +
+    '<span class="nm"></span>' +
+    '<button class="linkbtn" id="logoutBtn" type="button">ログアウト</button>';
+  box.querySelector(".nm").textContent = currentUser.name;
+  $("logoutBtn").addEventListener("click", async function(){
+    await api("/api/logout", { method:"POST" });
+    location.reload();
+  });
+}
+
+async function onCredential(response){
+  const r = await api("/api/session", {
+    method: "POST",
+    body: JSON.stringify({ credential: response.credential })
+  });
+  if (!r.data || !r.data.ok){
+    $("gateNotice").innerHTML = '<div class="notice errbox">' + esc((r.data && r.data.error) || "ログインできませんでした") + '</div>';
+    return;
+  }
+  currentUser = r.data.user;
+  setWho();
+  await loadBoard();
+  if ($("main").style.display !== "none") startAuto();
+}
+
+function initGoogle(){
+  if (!CONFIG.googleClientId || CONFIG.googleClientId.indexOf("ここを") === 0){
+    $("gbtn").innerHTML = "";
+    $("gateNotice").innerHTML = '<div class="notice">まだGoogleの設定ができていないよ。<code>public/先生/index.html</code> の <code>CONFIG.googleClientId</code> と、Cloudflare の環境変数 <code>GOOGLE_CLIENT_ID</code> に同じ値を入れてね。</div>';
+    return;
+  }
+  if (!window.google || !google.accounts || !google.accounts.id){
+    $("gbtn").innerHTML = "";
+    $("gateNotice").innerHTML = '<div class="notice">Googleのボタンを読みこめなかったよ。ページを開きなおしてね。</div>';
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: CONFIG.googleClientId,
+    callback: onCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true,
+    use_fedcm_for_prompt: false
+  });
+  google.accounts.id.renderButton($("gbtn"), {
+    type: "standard", theme: "outline", size: "large",
+    shape: "pill", text: "signin_with", locale: "ja", logo_alignment: "left"
+  });
+}
+
+async function boot(){
+  let me = null;
+  try {
+    const r = await api("/api/me");
+    if (r.data && r.data.signedIn) me = r.data.user;
+  } catch (e) {}
+
+  if (!me){
+    showGate("login");
+    return;
+  }
+  currentUser = me;
+  setWho();
+  await loadBoard();
+  if ($("main").style.display !== "none") startAuto();
+}
+
+window.addEventListener("load", function(){
+  boot();
+  let tries = 0;
+  const t = setInterval(function(){
+    tries++;
+    if ((window.google && google.accounts && google.accounts.id) || tries > 40){
+      clearInterval(t);
+      if ($("gateCard").style.display === "block") initGoogle();
+    }
+  }, 250);
+});
+</script>
+</body>
+</html>
