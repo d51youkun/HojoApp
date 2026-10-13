@@ -3,18 +3,19 @@ name = "maru-iken"
 compatibility_date = "2026-09-01"
 pages_build_output_dir = "public"
 
-# D1（データベース）の割り当て。
+# D1（データベース）の割り当て。database_id は もう 本物が 入っている。
 [[d1_databases]]
 binding = "DB"
 database_name = "maru-iken"
-database_id = "ここを database_id に書きかえる"
+database_id = "2337c09e-8ace-4708-bca5-a175966148a0"
 
-# 秘密はここに書かない（雲の上の Settings > Variables and Secrets に入れる）。
-# ・SESSION_SECRET … Cookie を まもる カギ（でぷろいのときに 自動で つくった）
-# ・TEACHER_PASS   … 先生画面の 合言葉（deploy2.sh が つくって 入れる）
-
+[vars]
 # 意見まとめの「同じ」判定のしきい値（0〜1）。大きいほど きびしく分ける。
 SIMILARITY_THRESHOLD = "0.80"
+
+# 秘密はここに書かない（Cloudflare の Settings > Variables and Secrets に入れる）。
+# ・SESSION_SECRET … Cookie を まもる カギ（デプロイのときに つくった）
+# ・TEACHER_PASS   … 先生画面の 合言葉（deploy2.sh が つくって 入れた）
 
 # Workers AI（意見を「意味」でまとめるのに使う）
 # バインド名は AI なので、コードからは env.AI で使える。
