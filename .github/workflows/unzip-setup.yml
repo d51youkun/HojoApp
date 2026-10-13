@@ -1,0 +1,72 @@
+# はじめての1回だけ：zip をリポジトリに展開して「ふつうのリポジトリ」にする
+#
+# なぜ これが あるか：
+#   GitHub の ブラウザ画面からのアップロードでは、.github/ や .gitignore のような
+#   「ドットで はじまるファイル」を 上げられないことが多い。
+#   だから zip で 上げた人は、まず これを 1回 走らせると リポジトリが ふつうの形になる。
+#
+# つかいかた：
+#   GitHub → このリポジトリ → Actions → 「zipをリポジトリに展開（1回だけ）」
+#   → Run workflow を おす
+#
+# 走ったあと：
+#   maru-iken.zip は 自動で 消える。リポジトリ直下に public/ functions/ などが ならぶ。
+#   そのあとは ふつうに push → deploy.yml がデプロイしてくれる。
+
+name: zipをリポジトリに展開（1回だけ）
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: ソースをとる
+        uses: actions/checkout@v6
+
+      - name: zip を展開して リポジトリに ならす
+        run: |
+          set -e
+          if [ ! -f maru-iken.zip ]; then
+            echo "maru-iken.zip が 見つかりません。もう 展開ずみかもしれません。"
+            exit 1
+          fi
+
+          rm -rf _tmp && mkdir -p _tmp
+          unzip -q -o maru-iken.zip -d _tmp
+
+          cfg=$(find _tmp -name wrangler.toml | head -1)
+          if [ -z "$cfg" ]; then
+            echo "エラー: zip の中に wrangler.toml が ありません"
+            exit 1
+          fi
+          SRC=$(dirname "$cfg")
+          echo "展開元: $SRC"
+
+          # .git は コピーしない（ワークフローが こわれないように）
+          ( cd "$SRC" && tar cf - --exclude=.git . ) | tar xf -
+
+          rm -rf _tmp
+          rm -f maru-iken.zip
+
+          echo "--- ならべかえ後 ---"
+          ls -a
+
+      - name: コミットして push
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "変更はありません"
+            exit 0
+          fi
+          git commit -m "zip を展開して リポジトリを ふつうの形にした"
+          git push
