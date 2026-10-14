@@ -317,7 +317,7 @@
 
     <div class="board">
       <div class="boardhead">
-        <div class="t">同じ意見ほど、まるが大きい <span>まるをおすと 名前と理由が見られるよ。<b>名前をおすと「どうする？」</b>が ひらきます</span></div>
+        <div class="t">同じ意見ほど、まるが大きい <span><b>まるの大きさ＝意見の かず</b>（「5こ」＝その意見が 5こ おくられた）。まるをおすと 名前と理由が見られるよ。名前をおすと「どうする？」が ひらきます</span></div>
         <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
       </div>
       <div class="boardbody">
@@ -501,7 +501,8 @@ function render(){
     return;
   }
 
-  const counts = clusters.map(function(c){ return Math.max(1, c.count); });
+  // まるの 大きさ ＝ 「意見の かず」（人が 何人か ではなく、意見が 何こ か）
+  const counts = clusters.map(function(c){ return Math.max(1, c.posts || c.count); });
   const L = layout(clusters.length, counts);
   const radii = L.radii, pos = L.pos;
 
@@ -530,7 +531,7 @@ function render(){
     const maxLines = r > 44 ? 3 : (r > 28 ? 2 : 1);   // 文字が 切れない ように 行を ゆるく
     const lines = wrap(c.label, labelSize, maxW, maxLines);
     const lineH = labelSize * 1.22;
-    const cntText = c.count + "人";
+    const cntText = (c.posts || 0) + "こ";
     const cntSize = Math.max(12.5, Math.min(21, r * 0.18));
 
     const blockH = lines.length * lineH + cntSize * 1.5;
@@ -592,12 +593,12 @@ function drawPanel(){
   let html = '<div class="phead">'
     + '<div class="cap">意見</div>'
     + '<div class="txt">' + esc(c.label) + '</div>'
-    + '<div class="meta">おなじ意見 <b>' + c.count + '</b> 人</div>'
+    + '<div class="meta">この 意見 <b>' + (c.posts || 0) + '</b> こ ／ <b>' + c.count + '</b> 人が 出した</div>'
     + '</div>';
 
   html += '<div class="tabs">'
     + '<button class="tab' + (activeTab === "people" ? " on" : "") + '" data-tab="people" type="button">名前<span class="n">' + c.count + '</span></button>'
-    + '<button class="tab' + (activeTab === "reasons" ? " on" : "") + '" data-tab="reasons" type="button">理由<span class="n">' + c.count + '</span></button>'
+    + '<button class="tab' + (activeTab === "reasons" ? " on" : "") + '" data-tab="reasons" type="button">意見<span class="n">' + (c.posts || 0) + '</span></button>'
     + '</div>';
 
   html += '<div class="list">';

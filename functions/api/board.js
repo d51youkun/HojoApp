@@ -77,7 +77,7 @@ export async function onRequestGet({ request, env }) {
         })),
       };
     })
-    .sort((a, b) => b.count - a.count || b.posts - a.posts || String(a.label).localeCompare(String(b.label), "ja"));
+    .sort((a, b) => b.posts - a.posts || b.count - a.count || String(a.label).localeCompare(String(b.label), "ja"));
 
   const people = new Set(items.map((it) => it.sid)).size;
 
