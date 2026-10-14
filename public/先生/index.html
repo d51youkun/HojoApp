@@ -163,6 +163,7 @@
   .row .nm{display:flex;align-items:center;gap:8px;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;}
   .row .nm span{min-width:0;}
   .row .rs{font-size:13px;line-height:1.75;color:var(--ink2);margin-top:4px;white-space:pre-wrap;word-break:break-word;}
+  .row .rs.none{color:var(--soft);font-size:12px;}
   .row .op{font-size:11.5px;color:var(--soft);margin-top:5px;}
   .del{
     margin-left:auto;flex:none;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:11.5px;
@@ -622,7 +623,9 @@ function drawPanel(){
         + '<div class="body">'
         + '<div class="nm"><span>' + esc(r.name) + '</span>'
         + '<button class="del" data-id="' + esc(String(r.id)) + '" type="button" aria-label="この意見をけす">けす</button></div>'
-        + '<div class="rs">' + esc(r.reason) + '</div>'
+        + (String(r.reason || "").trim()
+            ? '<div class="rs">' + esc(r.reason) + '</div>'
+            : '<div class="rs none">（理由は かいてない）</div>')
         + (String(r.opinion) !== String(c.label) ? '<div class="op">意見：' + esc(r.opinion) + '</div>' : '')
         + '</div></div>';
     });

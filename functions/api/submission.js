@@ -48,10 +48,9 @@ export async function onRequestPost({ request, env }) {
   }
 
   const opinion = cleanText(body.opinion, MAX_OPINION);
-  const reason = cleanText(body.reason, MAX_REASON);
+  const reason = cleanText(body.reason, MAX_REASON);   // 理由は かかなくても いい（空でも おくれる）
 
   if (!opinion) return fail(400, "「意見」を 入れてね", "empty_opinion");
-  if (!reason) return fail(400, "「理由」を 入れてね", "empty_reason");
 
   await env.DB.prepare(
     "INSERT INTO submissions (sid, name, opinion, reason, created_at) " +

@@ -254,6 +254,7 @@
   .askta:focus{outline:none;border-color:rgba(43,108,163,.55);box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(43,108,163,.15);}
   .stopmark{display:flex;align-items:center;gap:11px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:17px;color:#A62F19;margin-bottom:6px;}
   .stopmark svg{flex:none;}
+  .lbl .opt{font-weight:400;font-size:11.5px;color:var(--soft);margin-left:5px;letter-spacing:0;}
   </style>
 </head>
 <body>
@@ -305,13 +306,13 @@
       <div class="field reason">
         <div class="lbl">
           <span class="num">2</span>
-          <span class="t">その理由</span>
+          <span class="t">その理由<span class="opt">かかなくても いいよ</span></span>
           <span class="sub"><span id="c2">0</span> / <span id="m2">200</span> 字</span>
         </div>
         <textarea id="reason" rows="4" enterkeyhint="enter" autocomplete="off"></textarea>
       </div>
       <button class="send" id="sendBtn" type="button">送信する</button>
-      <p class="hint">エンターでは送信されません。<b>送信ボタン</b>をおしてね。<br>おくると、あたらしい意見として ふえていきます。</p>
+      <p class="hint">エンターでは送信されません。<b>送信ボタン</b>をおしてね。<br>おくると、あたらしい意見として ふえていきます。<br><b>理由は かかなくても おくれます。</b>むずかしいときは 意見だけでも だいじょうぶ。</p>
     </div>
 
     <div class="sent" id="sentBody">
@@ -326,7 +327,7 @@
         <div class="k">意見</div>
         <div class="v" id="sentOpinion"></div>
       </div>
-      <div class="quoted" style="border-left-color:#CBE3D7">
+      <div class="quoted" id="sentReasonBox" style="border-left-color:#CBE3D7">
         <div class="k">理由</div>
         <div class="v" id="sentReason"></div>
       </div>
@@ -472,7 +473,9 @@ function showSent(sub){
   $("formBody").style.display = "none";
   $("sentBody").classList.add("on");
   $("sentOpinion").textContent = sub.opinion;
-  $("sentReason").textContent = sub.reason;
+  $("sentReason").textContent = sub.reason || "";
+  // 理由を かかなかった ときは、理由の わく ごと かくす（からの 箱を 見せない）
+  $("sentReasonBox").style.display = (sub.reason && String(sub.reason).trim()) ? "block" : "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -531,7 +534,7 @@ $("sendBtn").addEventListener("click", async function(){
   const reason = $("reason").value.trim();
 
   if (!opinion){ toast("「意見」を 入れてね", true); $("opinion").focus(); return; }
-  if (!reason){ toast("「理由」を 入れてね", true); $("reason").focus(); return; }
+  // 理由は かかなくても おくれる（むずかしい 子の はーどるを 下げる）
 
   sending = true;
   const btn = $("sendBtn");
