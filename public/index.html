@@ -9,160 +9,238 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
+
   :root{
-    --paper:#FCFAF3;
-    --grid:#E1EBF1;
-    --grid-bold:#CADCE6;
-    --ink:#22303A;
-    --soft:#657A86;
+    --ink:#1B2631;
+    --ink2:#3E4E5C;
+    --soft:#66788A;
     --blue:#2B6CA3;
     --verm:#E4573D;
     --green:#3F8F63;
-    --line:#D8E3EA;
-    --white:#FFFFFF;
+    --purple:#7A5AA8;
+    --gold:#C9922B;
+    --edge:rgba(255,255,255,.72);
+    --edge-soft:rgba(255,255,255,.5);
+    --hair:rgba(27,38,49,.10);
+    --glass-hi:rgba(255,255,255,.72);
+    --glass-lo:rgba(255,255,255,.44);
+    --lift:0 1px 2px rgba(12,28,44,.07), 0 16px 40px rgba(12,28,44,.13);
+    --lift-sm:0 1px 2px rgba(12,28,44,.06), 0 8px 24px rgba(12,28,44,.10);
+    --inset:inset 0 1px 0 rgba(255,255,255,.92), inset 0 -1px 1px rgba(255,255,255,.42);
+    --r-xl:30px;
+    --r-lg:24px;
+    --r-md:18px;
+    --sheen:linear-gradient(118deg, rgba(255,255,255,.52) 0%, rgba(255,255,255,0) 32%, rgba(255,255,255,0) 70%, rgba(255,255,255,.28) 100%);
   }
+
   *{box-sizing:border-box;}
-  html,body{height:100%;}
+  html,body{min-height:100%;}
   body{
     margin:0;
     font-family:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;
     color:var(--ink);
-    background-color:var(--paper);
-    background-image:
-      linear-gradient(var(--grid-bold) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-bold) 1px, transparent 1px),
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size:120px 120px, 120px 120px, 24px 24px, 24px 24px;
-    background-position:-1px -1px, -1px -1px, -1px -1px, -1px -1px;
-    min-height:100%;
+    background:
+      radial-gradient(1100px 760px at 6% -6%, #FFE1D7 0%, rgba(255,225,215,0) 58%),
+      radial-gradient(900px 700px at 96% 4%, #D6E7F7 0%, rgba(214,231,247,0) 56%),
+      radial-gradient(1000px 880px at 82% 96%, #DCF0E2 0%, rgba(220,240,226,0) 60%),
+      radial-gradient(820px 800px at 8% 88%, #E9E1F6 0%, rgba(233,225,246,0) 60%),
+      linear-gradient(180deg,#F9FBFD 0%,#EDF3F8 100%);
+    background-attachment:fixed;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:720px;margin:0 auto;padding:22px 16px 64px;}
+  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 72px;position:relative;z-index:1;}
 
-  /* ---- 上のバー ---- */
-  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;flex-wrap:wrap;}
-  .brand{display:flex;align-items:center;gap:9px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:21px;letter-spacing:.04em;}
-  .brand svg{display:block;}
-  .who{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft);}
-  .avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--white);object-fit:cover;}
+  /* ---- 背景の にじみ（ガラスの うしろ） ---- */
+  .deco{position:fixed;inset:-12%;pointer-events:none;overflow:hidden;z-index:0;filter:blur(64px);opacity:.5;}
+  .deco span{position:absolute;border-radius:50%;}
+
+  /* ---- 上バー ---- */
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+  .brand{
+    display:flex;align-items:center;gap:9px;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;letter-spacing:.04em;
+    padding:9px 20px 9px 15px;border-radius:999px;
+    background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));
+    -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+    border:1px solid var(--edge);box-shadow:var(--inset), var(--lift-sm);
+  }
+  .brand svg{display:block;filter:drop-shadow(0 2px 5px rgba(228,87,61,.35));}
+  .who{
+    display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft);
+    padding:7px 13px;border-radius:999px;
+    background:rgba(255,255,255,.5);border:1px solid var(--edge-soft);
+    -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+  }
+  .who:empty{display:none;}
+  .avatar{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,.9);background:#fff;object-fit:cover;box-shadow:0 2px 6px rgba(12,28,44,.14);}
   .who .nm{font-weight:700;color:var(--ink);}
-  .linkbtn{background:none;border:none;padding:2px 4px;font:inherit;font-size:12.5px;color:var(--soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
-  .linkbtn:hover{color:var(--verm);}
+  .linkbtn{
+    background:rgba(255,255,255,.6);border:1px solid var(--edge-soft);border-radius:999px;
+    padding:4px 11px;font:inherit;font-size:12px;color:var(--ink2);cursor:pointer;
+    transition:background .16s, color .16s;
+  }
+  .linkbtn:hover{background:#fff;color:var(--verm);}
 
   /* ---- タイトル ---- */
-  .hero{margin-bottom:22px;}
+  .hero{margin-bottom:20px;}
   .hero h1{
     font-family:'Zen Maru Gothic',sans-serif;font-weight:900;
     font-size:clamp(28px,7vw,40px);line-height:1.25;margin:0 0 10px;letter-spacing:.01em;
+    text-shadow:0 1px 0 rgba(255,255,255,.7);
   }
   .hero h1 em{font-style:normal;color:var(--verm);}
-  .hero p{margin:0;color:var(--soft);font-size:14.5px;line-height:1.85;}
+  .hero p{margin:0;color:var(--ink2);font-size:14.5px;line-height:1.85;}
   .theme{
-    display:inline-block;margin-top:14px;padding:7px 15px;border-radius:999px;
-    background:var(--white);border:2px solid var(--blue);color:var(--blue);
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;
+    display:inline-block;margin-top:14px;padding:8px 17px;border-radius:999px;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;color:var(--blue);
+    background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.5));
+    border:1px solid rgba(43,108,163,.28);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+    box-shadow:var(--inset), var(--lift-sm);
   }
 
-  /* ---- カード ---- */
+  /* ---- ガラスの カード ---- */
   .card{
-    background:var(--white);border:2px solid var(--ink);border-radius:20px;
-    padding:24px 22px 22px;box-shadow:6px 6px 0 var(--ink);
-    margin-bottom:26px;
+    position:relative;
+    background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(255,255,255,.44));
+    -webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);
+    border:1px solid var(--edge);border-radius:var(--r-xl);
+    box-shadow:var(--inset), var(--lift);
+    padding:26px 24px 24px;margin-bottom:26px;
   }
-  .field{margin-bottom:22px;}
+  .card::after{
+    content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:var(--sheen);opacity:.85;
+  }
+  .field{position:relative;margin-bottom:22px;}
   .field:last-of-type{margin-bottom:18px;}
   .lbl{display:flex;align-items:baseline;gap:10px;margin-bottom:9px;}
   .lbl .num{
     font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:15px;
-    width:26px;height:26px;flex:none;border-radius:50%;background:var(--blue);color:#fff;
+    width:27px;height:27px;flex:none;border-radius:50%;color:#fff;
     display:grid;place-items:center;line-height:1;
+    background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 55%), linear-gradient(180deg,#3E82BC,#1F5580);
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 4px 12px rgba(31,85,128,.35);
   }
-  .field.reason .num{background:var(--green);}
-  .field.name .num{background:var(--verm);}
-  input.nametxt{
-    width:100%;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px;color:var(--ink);
-    padding:13px 14px;border:2px solid var(--line);border-radius:13px;background:#FDFEFE;outline:none;
-    transition:border-color .15s, box-shadow .15s;
+  .field.reason .num{
+    background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 55%), linear-gradient(180deg,#4CA375,#2C6B4A);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 4px 12px rgba(44,107,74,.32);
   }
-  input.nametxt::placeholder{color:#A9B8C0;font-weight:500;}
-  input.nametxt:focus{border-color:var(--verm);box-shadow:0 0 0 4px rgba(228,87,61,.13);}
-  .why{margin:0 0 20px;padding:11px 13px;border-radius:12px;background:#F4F8FB;border:1px solid var(--line);font-size:12.5px;line-height:1.8;color:var(--soft);}
-  .why b{color:var(--ink);}
+  .field.name .num{
+    background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 55%), linear-gradient(180deg,#EE7A63,#C8452C);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 4px 12px rgba(200,69,44,.32);
+  }
   .lbl .t{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:16.5px;}
   .lbl .sub{font-size:12px;color:var(--soft);margin-left:auto;font-variant-numeric:tabular-nums;}
-  textarea{
+  textarea, input.nametxt{
     width:100%;font-family:inherit;font-size:17px;line-height:1.7;color:var(--ink);
-    padding:13px 14px;border:2px solid var(--line);border-radius:13px;background:#FDFEFE;
-    resize:vertical;outline:none;transition:border-color .15s, box-shadow .15s;
+    padding:14px 16px;border-radius:var(--r-md);outline:none;
+    background:rgba(255,255,255,.5);
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:inset 0 2px 6px rgba(12,28,44,.07);
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    transition:background .18s, box-shadow .18s, border-color .18s;
   }
-  textarea::placeholder{color:#A9B8C0;}
-  textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(43,108,163,.12);}
-  .field.reason textarea:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(63,143,99,.14);}
+  textarea{resize:vertical;}
+  input.nametxt{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;}
+  textarea::placeholder, input.nametxt::placeholder{color:#9AAAB6;font-weight:500;}
+  textarea:focus, input.nametxt:focus{
+    background:rgba(255,255,255,.8);
+    border-color:rgba(43,108,163,.5);
+    box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(43,108,163,.14);
+  }
+  .field.reason textarea:focus{border-color:rgba(63,143,99,.55);box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(63,143,99,.15);}
+  .field.name input:focus{border-color:rgba(228,87,61,.5);box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(228,87,61,.14);}
 
+  /* ---- ボタン ---- */
   .send{
-    display:block;width:100%;padding:17px 20px;margin-top:6px;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;letter-spacing:.06em;
-    color:#fff;background:var(--verm);border:2px solid var(--ink);border-radius:15px;
-    box-shadow:0 6px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
+    position:relative;display:block;width:100%;padding:18px 20px;margin-top:8px;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;letter-spacing:.05em;color:#fff;
+    border:1px solid rgba(255,255,255,.45);border-radius:20px;cursor:pointer;
+    background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0) 46%), linear-gradient(180deg,#F0785F 0%,#E4573D 54%,#CB4330 100%);
+    text-shadow:0 1px 2px rgba(120,25,10,.3);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 7px rgba(120,25,10,.3),
+      0 12px 28px rgba(228,87,61,.34), 0 2px 4px rgba(120,25,10,.16);
+    transition:transform .12s, box-shadow .12s, filter .12s;
   }
-  .send:hover{background:#D94A30;}
-  .send:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink);}
-  .send:disabled{opacity:.55;cursor:not-allowed;box-shadow:0 6px 0 var(--ink);transform:none;}
-  .send:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
-  .hint{margin:12px 0 0;font-size:12.5px;color:var(--soft);line-height:1.7;text-align:center;}
+  .send:hover{filter:brightness(1.05);}
+  .send:active{transform:translateY(2px) scale(.996);box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 5px 14px rgba(228,87,61,.3);}
+  .send:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+  .send:focus-visible{outline:3px solid rgba(43,108,163,.55);outline-offset:3px;}
+  .hint{margin:14px 0 0;font-size:12.5px;color:var(--soft);line-height:1.7;text-align:center;}
   .hint b{color:var(--ink);}
+  .ghost{
+    width:100%;padding:14px;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;
+    color:var(--ink);cursor:pointer;border-radius:var(--r-md);
+    background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.55));
+    border:1px solid var(--edge);box-shadow:var(--inset), var(--lift-sm);
+    -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);
+    transition:transform .12s, box-shadow .12s;
+  }
+  .ghost:hover{background:#fff;}
+  .ghost:active{transform:translateY(2px);box-shadow:var(--inset), 0 3px 10px rgba(12,28,44,.1);}
 
-  /* ---- 送信後 ---- */
+  /* ---- 送信ずみ ---- */
   .sent{display:none;}
   .sent.on{display:block;}
-  .senthead{display:flex;align-items:center;gap:9px;margin-bottom:16px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:18px;color:var(--green);}
-  .senthead svg{flex:none;}
-  .quoted{border-left:5px solid var(--line);padding:2px 0 2px 15px;margin:0 0 16px;}
-  .quoted .k{font-size:12px;color:var(--soft);letter-spacing:.08em;margin-bottom:3px;}
+  .senthead{display:flex;align-items:center;gap:9px;margin-bottom:16px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:18px;color:#2C6B4A;}
+  .senthead svg{flex:none;filter:drop-shadow(0 2px 5px rgba(63,143,99,.3));}
+  .quoted{
+    border-left:3px solid rgba(255,255,255,.85);
+    padding:12px 16px;margin:0 0 14px;border-radius:0 var(--r-md) var(--r-md) 0;
+    background:rgba(255,255,255,.42);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+  }
+  .quoted .k{font-size:11.5px;color:var(--soft);letter-spacing:.08em;margin-bottom:4px;}
   .quoted .v{font-size:16.5px;line-height:1.8;white-space:pre-wrap;word-break:break-word;}
-  .ghost{
-    width:100%;padding:13px;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;
-    color:var(--ink);background:var(--white);border:2px solid var(--ink);border-radius:13px;
-    box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .06s, box-shadow .06s;
-  }
-  .ghost:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink);}
 
-  /* ---- ログイン ---- */
-  .login{background:var(--white);border:2px dashed var(--line);border-radius:20px;padding:26px 22px;text-align:center;}
-  .login h2{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:19px;margin:0 0 8px;}
-  .login p{margin:0 0 18px;font-size:13.5px;color:var(--soft);line-height:1.85;}
-  .gbtn{display:flex;justify-content:center;min-height:44px;}
+  /* ---- はじめての なまえ ---- */
+  .why{margin:0 0 18px;padding:12px 15px;border-radius:var(--r-md);font-size:12.5px;line-height:1.8;color:var(--ink2);
+    background:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.8);}
+  .why b{color:var(--verm);}
   .notice{
-    margin-top:16px;padding:12px 14px;border-radius:12px;font-size:12.5px;line-height:1.75;text-align:left;
-    background:#FFF6E8;border:1px solid #EBCF9A;color:#7A5A18;
+    margin-top:16px;padding:13px 15px;border-radius:var(--r-md);font-size:12.5px;line-height:1.75;text-align:left;
+    background:rgba(255,246,232,.72);border:1px solid rgba(235,207,154,.9);color:#7A5A18;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
   }
-  .notice code{background:#fff;padding:1px 5px;border-radius:4px;font-size:11.5px;border:1px solid #E3D3B4;}
+  .notice code{background:#fff;padding:1px 5px;border-radius:6px;font-size:11.5px;border:1px solid #E3D3B4;}
 
   /* ---- トースト ---- */
   .toast{
-    position:fixed;left:50%;bottom:26px;transform:translate(-50%,140%);
-    background:var(--ink);color:#fff;padding:14px 26px;border-radius:999px;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;
-    box-shadow:0 10px 26px rgba(34,48,58,.28);transition:transform .32s cubic-bezier(.2,.9,.3,1.3);
-    z-index:50;max-width:90vw;text-align:center;
+    position:fixed;left:50%;bottom:28px;transform:translate(-50%,260%);opacity:0;pointer-events:none;
+    padding:14px 28px;border-radius:999px;max-width:90vw;text-align:center;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;color:#fff;
+    background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 52%), rgba(27,38,49,.82);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+    border:1px solid rgba(255,255,255,.28);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 14px 34px rgba(12,28,44,.34);
+    transition:transform .34s cubic-bezier(.2,.9,.3,1.25), opacity .22s;z-index:50;
   }
-  .toast.on{transform:translate(-50%,0);}
-  .toast.err{background:#B4361F;}
-
-  /* ---- 背景のまる（かざり） ---- */
-  .deco{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:-1;}
-  .deco span{position:absolute;border-radius:50%;opacity:.5;}
+  .toast.on{transform:translate(-50%,0);opacity:1;}
+  .toast.err{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 52%), rgba(180,54,31,.85);}
 
   @media (max-width:520px){
-    .card{padding:20px 16px 18px;box-shadow:4px 4px 0 var(--ink);}
-    .wrap{padding:16px 12px 56px;}
+    .card{padding:22px 17px 20px;border-radius:26px;}
+    .wrap{padding:18px 13px 60px;}
     textarea{font-size:16px;}
   }
   @media (prefers-reduced-motion:reduce){
     *{transition:none !important;animation:none !important;}
   }
-</style>
+  @media (prefers-contrast:more){
+    .card,.brand,.theme,.ghost,.who{background:#fff;}
+    .hero p,.hint,.lbl .sub,.quoted .k{color:#3E4E5C;}
+  }
+  @supports not ((-webkit-backdrop-filter:blur(2px)) or (backdrop-filter:blur(2px))){
+    .card{background:rgba(255,255,255,.94);}
+    .brand,.theme,.ghost,.passtxt{background:#fff;}
+    body{background:#F2F6FA;}
+    .deco{display:none;}
+  }
+
+  </style>
 </head>
 <body>
 <div class="deco" id="deco"></div>
@@ -185,35 +263,40 @@
     <div class="theme" id="themeText">クラスで 大切にしたいこと</div>
   </div>
 
-  <!-- 入力フォーム -->
-  <section class="card" id="formCard">
-    <div id="formBody">
-      <div class="field name">
-        <div class="lbl">
-          <span class="num">1</span>
-          <span class="t">なまえ</span>
-        </div>
-        <input class="nametxt" id="name" type="text" maxlength="16" placeholder="れい：ようへい" autocomplete="off">
+  <!-- はじめての なまえ とうろく -->
+  <section class="card" id="nameCard" style="display:none">
+    <div class="field name">
+      <div class="lbl">
+        <span class="num">1</span>
+        <span class="t">なまえ</span>
       </div>
-      <p class="why">ここに書いた<b>なまえ</b>は、先生の画面に出ます。ログインはいりません。</p>
+      <input class="nametxt" id="name" type="text" maxlength="16" autocomplete="off">
+    </div>
+    <p class="why">この なまえは <b>はじめの 1回だけ</b> 決められます。あとから かえられません。先生の画面に 出る なまえを 入れてね。</p>
+    <button class="send" id="regBtn" type="button">これで はじめる</button>
+  </section>
+
+  <!-- 入力フォーム -->
+  <section class="card" id="formCard" style="display:none">
+    <div id="formBody">
       <div class="field">
         <div class="lbl">
-          <span class="num">2</span>
+          <span class="num">1</span>
           <span class="t">意見</span>
           <span class="sub"><span id="c1">0</span> / <span id="m1">60</span> 字</span>
         </div>
-        <textarea id="opinion" rows="2" enterkeyhint="enter" placeholder="れい：あいさつを 自分から する" autocomplete="off"></textarea>
+        <textarea id="opinion" rows="2" enterkeyhint="enter" autocomplete="off"></textarea>
       </div>
       <div class="field reason">
         <div class="lbl">
-          <span class="num">3</span>
+          <span class="num">2</span>
           <span class="t">その理由</span>
           <span class="sub"><span id="c2">0</span> / <span id="m2">200</span> 字</span>
         </div>
-        <textarea id="reason" rows="4" enterkeyhint="enter" placeholder="れい：言われた人が うれしい気持ちになるから" autocomplete="off"></textarea>
+        <textarea id="reason" rows="4" enterkeyhint="enter" autocomplete="off"></textarea>
       </div>
       <button class="send" id="sendBtn" type="button">送信する</button>
-      <p class="hint">エンターでは送信されません。<b>送信ボタン</b>をおしてね。<br>もう一度送ると、前の内容は上書きされます。</p>
+      <p class="hint">エンターでは送信されません。<b>送信ボタン</b>をおしてね。<br>おくると、あたらしい意見として ふえていきます。</p>
     </div>
 
     <div class="sent" id="sentBody">
@@ -232,7 +315,7 @@
         <div class="k">理由</div>
         <div class="v" id="sentReason"></div>
       </div>
-      <button class="ghost" id="editBtn" type="button">書きなおす</button>
+      <button class="ghost" id="newBtn" type="button">あたらしい意見を出す</button>
     </div>
   </section>
 </div>
@@ -318,51 +401,91 @@ async function api(path, options){
 }
 
 /* ---- 画面の切りかえ ---- */
+let myName = null;
+
 function setWho(name){
   const box = $("whoBox");
   if (!name){ box.innerHTML = ""; return; }
-  box.innerHTML = '<span class="nm"></span><button class="linkbtn" id="resetBtn" type="button">名前をクリア</button>';
+  box.innerHTML = '<span class="nm"></span>';
   box.querySelector(".nm").textContent = name + " さん";
-  $("resetBtn").addEventListener("click", async function(){
-    await api("/api/logout", { method: "POST" });
-    $("name").value = "";
-    showFormBody("", "", "");
-    toast("名前をクリアしたよ");
-  });
 }
 
-/* ---- 送信ずみの表示 ---- */
+function showNameCard(){
+  $("nameCard").style.display = "block";
+  $("formCard").style.display = "none";
+  $("name").value = "";
+  $("name").focus();
+}
+
+function showForm(){
+  $("nameCard").style.display = "none";
+  $("formCard").style.display = "block";
+  $("sentBody").classList.remove("on");
+  $("formBody").style.display = "block";
+  $("opinion").value = "";
+  $("reason").value = "";
+  $("c1").textContent = "0";
+  $("c2").textContent = "0";
+}
+
 function showSent(sub){
   $("formBody").style.display = "none";
   $("sentBody").classList.add("on");
   $("sentOpinion").textContent = sub.opinion;
   $("sentReason").textContent = sub.reason;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
-function showFormBody(name, opinion, reason){
-  $("sentBody").classList.remove("on");
-  $("formBody").style.display = "block";
-  if (typeof name === "string") $("name").value = name;
-  if (typeof opinion === "string") $("opinion").value = opinion;
-  if (typeof reason === "string") $("reason").value = reason;
-  $("c1").textContent = $("opinion").value.length;
-  $("c2").textContent = $("reason").value.length;
-}
-$("editBtn").addEventListener("click", function(){
-  showFormBody($("name").value, $("sentOpinion").textContent, $("sentReason").textContent);
-  $("opinion").focus();
+
+$("newBtn").addEventListener("click", showForm);
+
+/* ---- なまえの とうろく（はじめの 1回だけ） ---- */
+$("name").addEventListener("keydown", function(e){
+  // エンターでは とうろくしない。ボタンを おしてね。
+  if (e.key === "Enter") e.preventDefault();
 });
 
-/* ---- 送信 ---- */
+let registering = false;
+$("regBtn").addEventListener("click", async function(){
+  if (registering) return;
+  const name = $("name").value.trim();
+  if (!name){ toast("「なまえ」を 入れてね", true); $("name").focus(); return; }
+
+  registering = true;
+  const btn = $("regBtn");
+  btn.disabled = true;
+  btn.textContent = "とうろく中…";
+
+  try {
+    const r = await api("/api/register", {
+      method: "POST",
+      body: JSON.stringify({ name: name })
+    });
+    if (r.res.ok && r.data && r.data.ok){
+      myName = r.data.name;
+      setWho(myName);
+      toast("ようこそ、" + myName + " さん");
+      showForm();
+    } else {
+      toast((r.data && r.data.error) || "とうろくできませんでした", true);
+    }
+  } catch (e) {
+    toast("つながりませんでした。あとで ためしてね", true);
+  } finally {
+    registering = false;
+    btn.disabled = false;
+    btn.textContent = "これで はじめる";
+  }
+});
+
+/* ---- 送信（おくるたびに あたらしい意見） ---- */
 let sending = false;
 $("sendBtn").addEventListener("click", async function(){
   if (sending) return;
-  const name = $("name").value.trim();
   const opinion = $("opinion").value.trim();
   const reason = $("reason").value.trim();
 
-  if (!name){ toast("「なまえ」を入れてね", true); $("name").focus(); return; }
-  if (!opinion){ toast("「意見」を入れてね", true); $("opinion").focus(); return; }
-  if (!reason){ toast("「理由」を入れてね", true); $("reason").focus(); return; }
+  if (!opinion){ toast("「意見」を 入れてね", true); $("opinion").focus(); return; }
+  if (!reason){ toast("「理由」を 入れてね", true); $("reason").focus(); return; }
 
   sending = true;
   const btn = $("sendBtn");
@@ -372,11 +495,10 @@ $("sendBtn").addEventListener("click", async function(){
   try {
     const r = await api("/api/submission", {
       method: "POST",
-      body: JSON.stringify({ name: name, opinion: opinion, reason: reason })
+      body: JSON.stringify({ opinion: opinion, reason: reason })
     });
     if (r.res.ok && r.data && r.data.ok){
-      setWho(r.data.name || name);
-      showSent(r.data.submission);
+      showSent(r.data);
       toast("おくったよ！");
     } else {
       toast((r.data && r.data.error) || "送れませんでした", true);
@@ -390,26 +512,24 @@ $("sendBtn").addEventListener("click", async function(){
   }
 });
 
-/* ---- さいしょの読みこみ ---- */
+/* ---- さいしょの よみこみ ---- */
 async function boot(){
+  const params = new URLSearchParams(location.search);
+  if (params.get("reset") === "1"){
+    await api("/api/logout", { method: "POST" });
+    history.replaceState(null, "", location.pathname);
+  }
   try {
     const me = await api("/api/me");
-    if (me.data && me.data.signedIn && me.data.user && me.data.user.name){
-      setWho(me.data.user.name);
-    }
-    const mine = await api("/api/submission");
-    if (mine.res.ok && mine.data && mine.data.submission){
-      const s = mine.data.submission;
-      $("name").value = s.name || "";
-      $("opinion").value = s.opinion || "";
-      $("reason").value = s.reason || "";
-      $("c1").textContent = $("opinion").value.length;
-      $("c2").textContent = $("reason").value.length;
-      showSent(s);
+    if (me.data && me.data.registered && me.data.name){
+      myName = me.data.name;
+      setWho(myName);
+      showForm();
       return;
     }
   } catch (e) {}
-  showFormBody();
+  setWho("");
+  showNameCard();
 }
 window.addEventListener("load", boot);
 

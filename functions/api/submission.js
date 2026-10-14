@@ -1,39 +1,69 @@
-// GET  /api/submission … 自分の 送った ないよう
-// POST /api/submission … なまえ・意見・理由を おくる（同じ ブラウザからは 上書き）
+// POST /api/submission … 意見と 理由を おくる
+//
+// ・おくるたびに 「あたらしい意見」として 1行 ふえる（上書きしない）。
+// ・なまえは サーバーが kids 表から とる。リクエストの なまえは つかわない。
+//   だから なまえを いつわっても、とうろくした なまえしか 入らない。
 
-import { json, fail, getUser, newId, kidCookie } from "../_lib/auth.js";
+import { json, fail, cleanText, getSid, isTeacher } from "../_lib/auth.js";
+import { findKid } from "../_lib/kids.js";
 
-const MAX_NAME = 16;
 const MAX_OPINION = 60;
 const MAX_REASON = 200;
 
-function cleanText(text, max) {
-  return String(text || "")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
-    .trim()
-    .slice(0, max);
-}
-
-function cleanName(text, max) {
-  return cleanText(text, max).replace(/\s+/g, " ");
-}
-
 export async function onRequestGet({ request, env }) {
-  const user = await getUser(request, env);
-  if (!user) return json({ ok: true, submission: null });
+  const kid = await findKid(env, await getSid(request, env));
+  if (!kid) return json({ ok: true, registered: false, count: 0, latest: null });
 
-  const row = await env.DB.prepare(
-    "SELECT name, opinion, reason, created_at FROM submissions WHERE sid = ?1"
+  const c = await env.DB.prepare("SELECT COUNT(*) AS n FROM submissions WHERE sid = ?1")
+    .bind(kid.sid)
+    .first();
+  const latest = await env.DB.prepare(
+    "SELECT opinion, reason, created_at FROM submissions WHERE sid = ?1 ORDER BY id DESC LIMIT 1"
   )
-    .bind(user.id)
+    .bind(kid.sid)
     .first();
 
-  return json({ ok: true, submission: row || null });
+  return json({
+    ok: true,
+    registered: true,
+    name: kid.name,
+    count: c && c.n ? c.n : 0,
+    latest: latest || null,
+  });
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.SESSION_SECRET) {
-    return fail(500, "サーバーの せってい（SESSION_SECRET）が まだです", "server_not_configured");
+  const kid = await findKid(env, await getSid(request, env));
+  if (!kid) return fail(401, "まず 「なまえ」を とうろくしてね", "not_registered");
+
+  let body;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return fail(400, "リクエストの かたちが 正しくありません", "bad_request");
+  }
+
+  const opinion = cleanText(body.opinion, MAX_OPINION);
+  const reason = cleanText(body.reason, MAX_REASON);
+
+  if (!opinion) return fail(400, "「意見」を 入れてね", "empty_opinion");
+  if (!reason) return fail(400, "「理由」を 入れてね", "empty_reason");
+
+  await env.DB.prepare(
+    "INSERT INTO submissions (sid, name, opinion, reason, created_at) " +
+      "VALUES (?1, ?2, ?3, ?4, datetime('now'))"
+  )
+    .bind(kid.sid, kid.name, opinion, reason)
+    .run();
+
+  return json({ ok: true, name: kid.name, opinion: opinion, reason: reason });
+}
+
+// DELETE /api/submission … 先生が 意見を 1つ けす
+// けすには 合言葉（先生の Cookie）が いる。子どもからは けせない。
+export async function onRequestDelete({ request, env }) {
+  if (!(await isTeacher(request, env))) {
+    return fail(401, "合言葉を 入れてね", "need_pass");
   }
 
   let body;
@@ -43,27 +73,20 @@ export async function onRequestPost({ request, env }) {
     return fail(400, "リクエストの かたちが 正しくありません", "bad_request");
   }
 
-  const name = cleanName(body.name, MAX_NAME);
-  const opinion = cleanText(body.opinion, MAX_OPINION);
-  const reason = cleanText(body.reason, MAX_REASON);
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return fail(400, "どの意見か わからなかったよ", "bad_id");
+  }
 
-  if (!name) return fail(400, "「なまえ」を 入れてね", "empty_name");
-  if (!opinion) return fail(400, "「意見」を 入れてね", "empty_opinion");
-  if (!reason) return fail(400, "「理由」を 入れてね", "empty_reason");
+  const row = await env.DB.prepare("SELECT id, name, opinion FROM submissions WHERE id = ?1")
+    .bind(id)
+    .first();
+  if (!row) return fail(404, "その意見は もう なかったよ", "not_found");
 
-  const user = (await getUser(request, env)) || { id: newId(), name: name };
-
-  await env.DB.prepare(
-    "INSERT INTO submissions (sid, name, opinion, reason, created_at) " +
-      "VALUES (?1, ?2, ?3, ?4, datetime('now')) " +
-      "ON CONFLICT(sid) DO UPDATE SET " +
-      "name = ?2, opinion = ?3, reason = ?4, created_at = datetime('now')"
-  )
-    .bind(user.id, name, opinion, reason)
+  await env.DB.prepare("DELETE FROM submissions WHERE id = ?1").bind(id).run();
+  await env.DB.prepare("DELETE FROM opinion_vectors WHERE subject_id = ?1")
+    .bind(String(id))
     .run();
 
-  return json(
-    { ok: true, name: name, submission: { name: name, opinion: opinion, reason: reason } },
-    { headers: { "set-cookie": await kidCookie(env, { id: user.id, name: name }) } }
-  );
+  return json({ ok: true, deleted: id, name: row.name, opinion: row.opinion });
 }

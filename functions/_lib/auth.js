@@ -1,11 +1,11 @@
-// まる意見：セッション（Cookie）まわり
-// ログインは ありません。子どもは「なまえ」を打つだけ。
-// 先生画面は「合言葉（TEACHER_PASS）」で ひらきます。
+// まる意見：Cookie（セッション）まわり
+// ログインは ありません。子どもは「なまえ」を 1回だけ とうろくします。
+// 先生画面は 合言葉（TEACHER_PASS）で ひらきます。
 // Pages Functions では「_」で始まるフォルダはURLにならないので、共通部品はここに置く。
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
-const KID_COOKIE = "maru_session";
+const KID_COOKIE = "maru_sid";
 const TEACHER_COOKIE = "maru_teacher";
 
 /* ---------- レスポンス補助 ---------- */
@@ -127,23 +127,31 @@ export function newId() {
   return s;
 }
 
-/* ---------- 子どものセッション（なまえ だけ） ---------- */
-
-export async function getUser(request, env) {
-  if (!env.SESSION_SECRET) return null;
-  const token = parseCookies(request)[KID_COOKIE];
-  if (!token) return null;
-  const p = await readToken(env.SESSION_SECRET, token);
-  if (!p || !p.i) return null;
-  return { id: String(p.i), name: String(p.n || "") };
+export function cleanText(text, max) {
+  return String(text || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .trim()
+    .slice(0, max);
 }
 
-export async function kidCookie(env, user) {
-  const token = await signToken(env.SESSION_SECRET, { i: user.id, n: user.name }, 24 * 180);
+/* ---------- 子どもの あいことば（sid）だけの Cookie ---------- */
+
+/** Cookie から sid を とりだす。なまえは ここには 入れない（あとで D1 から とる）。 */
+export async function getSid(request, env) {
+  if (!env.SESSION_SECRET) return "";
+  const token = parseCookies(request)[KID_COOKIE];
+  if (!token) return "";
+  const p = await readToken(env.SESSION_SECRET, token);
+  if (!p || !p.s) return "";
+  return String(p.s);
+}
+
+export async function sidCookie(env, sid) {
+  const token = await signToken(env.SESSION_SECRET, { s: sid }, 24 * 180);
   return cookieHeader(KID_COOKIE, token, 180 * 86400);
 }
 
-/* ---------- 先生の合言葉 ---------- */
+/* ---------- 先生の 合言葉 ---------- */
 
 export function checkPass(env, input) {
   const pass = String(env.TEACHER_PASS || "").trim();

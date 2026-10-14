@@ -5,6 +5,7 @@
 //  2) 使えない／失敗したときは、文字の並びの近さでまとめる（cluster.js）
 // どちらでまとめたかは method（"ai" / "bigram"）で返す。
 //
+// 丸の大きさ＝「同じ意見の 人の かず」。同じ人が にている意見を 2つ 出しても 人は 1人。
 // 見られるのは先生だけ（合言葉の Cookie を持っている人）。
 
 import { json, fail, isTeacher } from "../_lib/auth.js";
@@ -18,7 +19,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT sid, sid AS email, name, opinion, reason, created_at FROM submissions ORDER BY created_at ASC"
+    "SELECT id, sid, name, opinion, reason, created_at FROM submissions ORDER BY created_at ASC, id ASC"
   ).all();
   const items = results || [];
 
@@ -55,27 +56,38 @@ export async function onRequestGet({ request, env }) {
   }
 
   const clusters = groups
-    .map((g, i) => ({
-      id: "c" + i,
-      label: g.label,
-      count: g.members.length,
-      members: g.members.map((m) => ({ name: m.name })),
-      reasons: g.members.map((m) => ({
-        name: m.name,
-        reason: m.reason,
-        opinion: m.opinion,
-      })),
-    }))
-    .sort((a, b) => b.count - a.count || String(a.label).localeCompare(String(b.label), "ja"));
+    .map((g, i) => {
+      const names = new Map();
+      g.members.forEach((m) => {
+        if (!names.has(m.sid)) names.set(m.sid, m.name);
+      });
+      return {
+        id: "c" + i,
+        label: g.label,
+        count: names.size,                 // 人のかず（同じ人は 1人）
+        posts: g.members.length,           // 意見の かず
+        members: Array.from(names.values()).map((name) => ({ name: name })),
+        reasons: g.members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          reason: m.reason,
+          opinion: m.opinion,
+        })),
+      };
+    })
+    .sort((a, b) => b.count - a.count || b.posts - a.posts || String(a.label).localeCompare(String(b.label), "ja"));
+
+  const people = new Set(items.map((it) => it.sid)).size;
 
   return json({
     ok: true,
     total: items.length,
+    people: people,
     clusterCount: clusters.length,
-    method,
-    threshold,
-    note,
+    method: method,
+    threshold: threshold,
+    note: note,
     updatedAt: new Date().toISOString(),
-    clusters,
+    clusters: clusters,
   });
 }

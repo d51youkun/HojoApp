@@ -1,9 +1,10 @@
-// GET /api/me … いま おぼえている なまえ を かえす
+// GET /api/me … この ブラウザが とうろくずみか どうかを かえす
 
-import { json, getUser } from "../_lib/auth.js";
+import { json, getSid } from "../_lib/auth.js";
+import { findKid } from "../_lib/kids.js";
 
 export async function onRequestGet({ request, env }) {
-  const user = await getUser(request, env);
-  if (!user || !user.name) return json({ ok: true, signedIn: false, user: null });
-  return json({ ok: true, signedIn: true, user: { name: user.name } });
+  const kid = await findKid(env, await getSid(request, env));
+  if (!kid) return json({ ok: true, registered: false, name: null });
+  return json({ ok: true, registered: true, name: kid.name });
 }
