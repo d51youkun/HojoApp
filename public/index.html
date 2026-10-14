@@ -251,7 +251,8 @@ function shrink(file){
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = function(){
-      const tries = [[1000,.72],[800,.62],[620,.55],[460,.5]];
+      const TARGET = 165000;   // これより 小さく する（D1の 実測の わくに あわせた）
+      const tries = [[1200,.72],[1000,.66],[860,.62],[700,.56],[560,.5],[440,.45]];
       let out = null;
       for (let i = 0; i < tries.length; i++){
         const max = tries[i][0], q = tries[i][1];
@@ -264,10 +265,10 @@ function shrink(file){
         g.drawImage(img, 0, 0, w, h);
         const d = c.toDataURL("image/jpeg", q);
         out = { data: d, bytes: Math.round(d.length * 0.75), w: w, h: h };
-        if (d.length <= 450000) break;
+        if (d.length <= TARGET) break;
       }
       URL.revokeObjectURL(url);
-      if (!out || out.data.length > 500000) rej(new Error("too_big"));
+      if (!out || out.data.length > 195000) rej(new Error("too_big"));
       else res(out);
     };
     img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error("bad_image")); };
@@ -289,7 +290,7 @@ $("photo").addEventListener("change", async function(){
     toast("写真を 入れたよ（おくる ときに いっしょに おくられる）");
   } catch (e) {
     photoData = null; photoBytes = 0;
-    toast("この 写真は つかえませんでした。べつのを ためしてね", true);
+    toast("この 写真は 大きすぎて つかえませんでした。べつのを ためしてね", true);
   }
 });
 $("pvClear").addEventListener("click", function(){
@@ -301,16 +302,16 @@ async function sendPhoto(caption){
   if (!photoData) return;
   const d = photoData, b = photoBytes;
   try {
-    const r = await api("/api/photo", { method: "POST", body: JSON.stringify({ data: d, bytes: b, caption: caption }) });
+    const r = await api("/api/photos", { method: "POST", body: JSON.stringify({ data: d, bytes: b, caption: caption }) });
     if (r.res.ok && r.data && r.data.ok){
       toast("写真も アップしたよ！");
       photoData = null; photoBytes = 0;
       $("pvWrap").style.display = "none"; $("pv").src = "";
     } else {
-      toast("意見は おくれたけど、写真は おくれなかった", true);
+      toast("意見は おくれたけど 写真は おくれなかった（" + httpReason(r.res, r.data) + "）", true);
     }
   } catch (e) {
-    toast("意見は おくれたけど、写真は おくれなかった", true);
+    toast("意見は おくれたけど 写真は おくれなかった（" + ((e && e.message) || "network") + "）", true);
   }
 }
 
@@ -628,10 +629,10 @@ $("regBtn").addEventListener("click", async function(){
       // おなじ なまえで 入りなおそうとした人
       showBan({ name: name, message: r.data.error || "" });
     } else {
-      toast((r.data && r.data.error) || "とうろくできませんでした", true);
+      toast(httpReason(r.res, r.data), true);
     }
   } catch (e) {
-    toast("つながりませんでした。あとで ためしてね", true);
+    toast(netReason(e), true);
   } finally {
     registering = false;
     btn.disabled = false;
@@ -664,10 +665,10 @@ $("sendBtn").addEventListener("click", async function(){
       toast("おくったよ！");
       await sendPhoto(r.data.opinion);
     } else {
-      toast((r.data && r.data.error) || "送れませんでした", true);
+      toast(httpReason(r.res, r.data), true);
     }
   } catch (e) {
-    toast("つながりませんでした。あとで ためしてね", true);
+    toast(netReason(e), true);
   } finally {
     sending = false;
     btn.disabled = false;
@@ -723,12 +724,12 @@ function askItem(a, kept){
       } else if (r.data && r.data.code === "banned"){
         showBan({ name: myName, message: r.data.error || "" });
       } else {
-        toast((r.data && r.data.error) || "おくれませんでした", true);
+        toast(httpReason(r.res, r.data), true);
         btn.disabled = false;
         btn.textContent = "こたえる";
       }
     } catch (e) {
-      toast("つながりませんでした。あとで ためしてね", true);
+      toast(netReason(e), true);
       btn.disabled = false;
       btn.textContent = "こたえる";
     }
@@ -802,6 +803,16 @@ async function tryRestore(){
     if (r.res.ok && r.data && r.data.ok){ myName = ""; return; }   // Cookie を もどせた → すぐ 「/api/me」 を もういちど 見る
     if (r.res.status === 404) forgetSid();                          // もう いない → おぼえを すてる
   } catch (e) {}
+}
+
+/* ---- エラーの りゆうを 見える形に する ---- */
+function netReason(e){
+  const m = (e && (e.message || e.name)) || "network";
+  return "つながりませんでした（" + m + "）。もういちど おしてね";
+}
+function httpReason(res, data){
+  if (data && data.error) return data.error;
+  return "サーバーが こたえました（" + (res && res.status) + "）";
 }
 
 /* ---- リロードなしで 反映する（5秒ごとに 見にいく） ---- */

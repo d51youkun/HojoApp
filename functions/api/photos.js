@@ -8,7 +8,7 @@ import { json, fail, getSid, isStaff } from "../_lib/auth.js";
 import { findKid } from "../_lib/kids.js";
 import { isBanned } from "../_lib/rules.js";
 
-const MAX_DATA = 500000; // 文字（base64）。ブラウザで 小さくしてから おくる
+const MAX_DATA = 195000; // 文字（base64）。D1で 実測して 安全な わく（200KBの 画像まで）
 
 export async function onRequestGet({ request, env }) {
   if (!(await isStaff(request, env))) {
@@ -39,17 +39,22 @@ export async function onRequestPost({ request, env }) {
     return fail(400, "写真の かたちが 正しくありません", "bad_image");
   }
   if (data.length > MAX_DATA) {
-    return fail(413, "写真が 大きすぎます（小さくして もういちど）", "too_big");
+    return fail(413, "写真が 大きすぎます（ブラウザで 小さくしてから おくってね）", "too_big");
   }
 
   const caption = String(body.caption || "").slice(0, 60);
   const bytes = Number(body.bytes) || 0;
 
-  const r = await env.DB.prepare(
-    "INSERT INTO photos (sid, name, caption, data, bytes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'))"
-  )
-    .bind(kid.sid, kid.name, caption, data, bytes)
-    .run();
+  let r;
+  try {
+    r = await env.DB.prepare(
+      "INSERT INTO photos (sid, name, caption, data, bytes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'))"
+    )
+      .bind(kid.sid, kid.name, caption, data, bytes)
+      .run();
+  } catch (err) {
+    return fail(500, "保存できませんでした（写真が 大きすぎる かも）", "save_failed");
+  }
 
   return json({ ok: true, name: kid.name, id: r.meta && r.meta.last_row_id });
 }
