@@ -26,3 +26,26 @@ export async function countKids(env) {
   const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM kids").first();
   return row && row.n ? row.n : 0;
 }
+
+/**
+ * とうろくずみの 人ぜんいん（意見を まだ 出していない人も ふくむ）。
+ * 意見の かずと、いま Ban中か どうかも つける。
+ * → 先生が「意見を 出していない子」も 名指しで しつもん／Ban できる。
+ */
+export async function listKidsWithStats(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT k.sid, k.name, k.created_at, " +
+      "  (SELECT COUNT(*) FROM submissions s WHERE s.sid = k.sid) AS posts, " +
+      "  (SELECT COUNT(*) FROM bans b WHERE b.sid = k.sid) AS banned " +
+      "FROM kids k ORDER BY k.created_at DESC"
+  ).all();
+  return (results || []).map(function (r) {
+    return {
+      sid: r.sid,
+      name: r.name,
+      created_at: r.created_at,
+      posts: r.posts || 0,
+      banned: !!r.banned,
+    };
+  });
+}

@@ -56,6 +56,9 @@
 
   /* ---- 上バー ---- */
   .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--soft);}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:#4CA375;box-shadow:0 0 0 4px rgba(76,163,117,.18);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
   .brand{
     display:flex;align-items:center;gap:9px;
     font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;letter-spacing:.04em;
@@ -265,6 +268,7 @@
       </svg>
       まる意見
     </div>
+    <div class="live" id="liveBox" style="display:none"><span class="dot"></span>じどうで こうしん中</div>
     <div class="who" id="whoBox"></div>
   </div>
 
@@ -500,6 +504,8 @@ $("regBtn").addEventListener("click", async function(){
       myName = r.data.name;
       setWho(myName);
       toast("ようこそ、" + myName + " さん");
+      myState = "form";
+      showLive(true);
       showForm();
       loadAsks();
     } else if (r.data && r.data.code === "banned_name"){
@@ -555,9 +561,10 @@ $("sendBtn").addEventListener("click", async function(){
 /* ---- 先生からの しつもん ---- */
 let myAsks = [];
 
-function askItem(a){
+function askItem(a, kept){
   const item = document.createElement("div");
   item.className = "askitem";
+  item.setAttribute("data-id", String(a.id));
 
   const q = document.createElement("div");
   q.className = "askq";
@@ -576,6 +583,7 @@ function askItem(a){
   ta.rows = 3;
   ta.maxLength = CONFIG.maxReason;
   ta.placeholder = "こたえを 書いてね";
+  if (kept) ta.value = kept;
   item.appendChild(ta);
 
   const btn = document.createElement("button");
@@ -616,9 +624,17 @@ function showAskCard(){
   const card = $("askCard");
   if (!card) return;
   if (!myAsks.length){ card.style.display = "none"; $("askBody").innerHTML = ""; return; }
+
+  // 書いている とちゅうの こたえを ひかえておく（こうしんで 消えないように）
+  const kept = {};
   const body = $("askBody");
+  Array.prototype.forEach.call(body.querySelectorAll(".askitem"), function(it){
+    const ta = it.querySelector("textarea");
+    if (ta && ta.value.trim()) kept[it.getAttribute("data-id")] = ta.value;
+  });
+
   body.innerHTML = "";
-  myAsks.forEach(function(a){ body.appendChild(askItem(a)); });
+  myAsks.forEach(function(a){ body.appendChild(askItem(a, kept[String(a.id)] || "")); });
   card.style.display = "block";
 }
 
@@ -627,13 +643,19 @@ async function loadAsks(){
     const r = await api("/api/myask");
     myAsks = (r.data && r.data.asks) || [];
   } catch (e) {
-    myAsks = [];
+    return;   // つながらない ときは いまの 画面を そのままにして おく
   }
+  const sig = myAsks.map(function(a){ return a.id + ":" + (a.answered ? 1 : 0); }).join(",");
+  if (sig === askSig) return;   // 中身が おなじなら 画面に さわらない
+  askSig = sig;
   showAskCard();
 }
 
 /* ---- ていし（Ban）されたとき ---- */
-function showBan(info){
+function showBan(info, silent){
+  if (myState !== "ban") silent = false;
+  myState = "ban";
+  showLive(false);
   $("nameCard").style.display = "none";
   $("formCard").style.display = "none";
   $("askCard").style.display = "none";
@@ -643,38 +665,73 @@ function showBan(info){
     ? "先生から：" + msg
     : "先生が アカウントを ていし しました。先生に そうだんしてね。";
   $("banCard").style.display = "block";
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!silent) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ---- リロードなしで 反映する（5秒ごとに 見にいく） ---- */
+let myState = "";       // "" | "name" | "form" | "ban"
+let askSig = "";
+let pollTimer = null;
+
+function showLive(on){
+  const b = $("liveBox");
+  if (b) b.style.display = on ? "flex" : "none";
+}
+
+async function refresh(){
+  if (document.hidden) return;
+
+  let d = null;
+  try { const r = await api("/api/me"); d = r.data; } catch (e) { return; }
+  if (!d || !d.ok) return;
+
+  // 1) 止められている？
+  if (d.banned){ showBan(d, true); return; }
+
+  // 2) とうろくずみ → フォーム（はじめて 入るときだけ 中身を 消す）
+  if (d.registered && d.name){
+    myName = d.name;
+    setWho(myName);
+    showLive(true);
+    if (myState !== "form"){
+      myState = "form";
+      showForm();
+    }
+    await loadAsks();
+    return;
+  }
+
+  // 3) まだ とうろくしていない
+  showLive(false);
+  if (myState !== "name"){
+    myState = "name";
+    myAsks = []; askSig = "";
+    showAskCard();
+    setWho("");
+    showNameCard();
+  }
+}
+
+function startPoll(){
+  if (pollTimer) return;
+  pollTimer = setInterval(refresh, 5000);
+}
+
+document.addEventListener("visibilitychange", function(){
+  if (!document.hidden) refresh();   // タブに もどったら すぐ 見にいく
+});
+
 /* ---- さいしょの よみこみ ---- */
-async function boot(){
+window.addEventListener("load", async function(){
   const params = new URLSearchParams(location.search);
   if (params.get("reset") === "1"){
     await api("/api/logout", { method: "POST" });
     history.replaceState(null, "", location.pathname);
   }
-
-  let me = null;
-  try { me = await api("/api/me"); } catch (e) {}
-
-  // 止められている人は、まずそれを しらせる（入力させない）
-  if (me && me.data && me.data.banned){
-    showBan(me.data);
-    return;
-  }
-
-  if (me && me.data && me.data.registered && me.data.name){
-    myName = me.data.name;
-    setWho(myName);
-    showForm();
-    await loadAsks();
-    return;
-  }
-
-  setWho("");
-  showNameCard();
-}
-window.addEventListener("load", boot);
+  await refresh();
+  if (myState === ""){ myState = "name"; showNameCard(); }   // つながらない ときも まっしろに しない
+  startPoll();
+});
 
 </script>
 </body>

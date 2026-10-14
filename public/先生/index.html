@@ -264,6 +264,9 @@
   .act.cancel{background:transparent;border-color:transparent;text-align:center;color:var(--soft);font-weight:600;margin-bottom:0;}
   .row.tap{cursor:pointer;border-radius:14px;}
   .row.tap:hover{background:rgba(43,108,163,.06);}
+  .banrow.tap2{cursor:pointer;border-radius:14px;}
+  .banrow.tap2:hover{background:rgba(43,108,163,.06);}
+  .chip.ban{background:#FDECE9;color:#A62F19;border-color:rgba(200,73,46,.25);}
   .chip{display:inline-block;flex:none;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;
         background:#EAF2FA;color:#2B6CA3;border:1px solid rgba(43,108,163,.18);}
   .chip.done{background:#E8F4EC;color:#2C6B4A;border-color:rgba(63,143,99,.22);}
@@ -328,6 +331,11 @@
     <section class="banbox" id="banBox" style="display:none">
       <h3>止めている人（Banリスト）</h3>
       <div id="banList"></div>
+    </section>
+
+    <section class="banbox" id="kidBox" style="display:none">
+      <h3 style="color:#2B6CA3">とうろくずみの人（意見が まだの人も 出ます）</h3>
+      <div id="kidList"></div>
     </section>
   </section>
 </div>
@@ -784,20 +792,23 @@ window.addEventListener("load", boot);
    ========================================================= */
 var askMap = {};    // sid -> [しつもん…]
 var banList = [];   // 止めている人
+var kidsList = [];  // とうろくずみの人
 
 async function loadAdmin(){
   try {
-    const rs = await Promise.all([api("/api/ask"), api("/api/ban")]);
+    const rs = await Promise.all([api("/api/ask"), api("/api/ban"), api("/api/kids")]);
     askMap = {};
     ((rs[0].data && rs[0].data.asks) || []).forEach(function(a){
       if (!askMap[a.sid]) askMap[a.sid] = [];
       askMap[a.sid].push(a);
     });
     banList = (rs[1].data && rs[1].data.bans) || [];
+    kidsList = (rs[2].data && rs[2].data.kids) || [];
     const st = $("panel").scrollTop;
     drawPanel();
     $("panel").scrollTop = st;
     drawBans();
+    drawKids();
   } catch (e) {}
 }
 
@@ -924,7 +935,6 @@ function drawBans(){
   const list = $("banList");
   if (!box || !list) return;
   if (!banList.length){ box.style.display = "none"; list.innerHTML = ""; return; }
-
   let html = "";
   banList.forEach(function(b){
     html += '<div class="banrow">'
@@ -955,6 +965,33 @@ function drawBans(){
         btn.disabled = false;
         btn.textContent = "復旧";
       }
+    });
+  });
+}
+/* ---------- とうろくずみの人の リスト ---------- */
+function drawKids(){
+  const box = $("kidBox");
+  const list = $("kidList");
+  if (!box || !list) return;
+  if (!kidsList.length){ box.style.display = "none"; list.innerHTML = ""; return; }
+
+  let html = "";
+  kidsList.forEach(function(k){
+    const when = String(k.created_at || "").slice(5, 16).replace("T", " ");
+    html += '<div class="banrow tap2" data-sid="' + esc(String(k.sid)) + '" data-name="' + esc(k.name) + '" title="おすと「どうする？」が ひらく">'
+      + '<div class="ini">' + esc(initial(k.name)) + '</div>'
+      + '<div class="bn">' + esc(k.name)
+      + '<div class="why2">意見 ' + k.posts + '件' + (when ? ' ・ とうろく ' + esc(when) : '') + '</div>'
+      + '</div>'
+      + (k.banned ? '<span class="chip ban">Ban中</span>' : (askChip(k.sid) || '<span class="chip">まだ 意見なし</span>'))
+      + '</div>';
+  });
+  list.innerHTML = html;
+  box.style.display = "block";
+
+  Array.prototype.forEach.call(list.querySelectorAll(".tap2"), function(row){
+    row.addEventListener("click", function(){
+      openActions(row.getAttribute("data-sid"), row.getAttribute("data-name"));
     });
   });
 }
