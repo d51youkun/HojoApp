@@ -12,6 +12,7 @@ export async function onRequestGet({ request, env }) {
   return json({
     ok: true,
     registered: true,
+    sid: kid.sid,
     name: ban && ban.name ? ban.name : kid.name,
     banned: !!ban,
     message: ban ? ban.reason || "" : "",

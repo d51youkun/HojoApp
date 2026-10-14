@@ -8,13 +8,13 @@
 // 丸の大きさ＝「同じ意見の 人の かず」。同じ人が にている意見を 2つ 出しても 人は 1人。
 // 見られるのは先生だけ（合言葉の Cookie を持っている人）。
 
-import { json, fail, isTeacher } from "../_lib/auth.js";
+import { json, fail, isAdmin } from "../_lib/auth.js";
 import { clusterize, medoidLabel } from "../_lib/cluster.js";
 import { ensureVectors } from "../_lib/vectorstore.js";
 import { clusterByVectors, medoidByVectors, DEFAULT_THRESHOLD } from "../_lib/ai.js";
 
 export async function onRequestGet({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
 

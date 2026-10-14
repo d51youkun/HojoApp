@@ -7,6 +7,7 @@ const enc = new TextEncoder();
 const dec = new TextDecoder();
 const KID_COOKIE = "maru_sid";
 const TEACHER_COOKIE = "maru_teacher";
+const ADMIN_COOKIE = "maru_admin";
 
 /* ---------- レスポンス補助 ---------- */
 
@@ -137,13 +138,40 @@ export function cleanText(text, max) {
 /* ---------- 子どもの あいことば（sid）だけの Cookie ---------- */
 
 /** Cookie から sid を とりだす。なまえは ここには 入れない（あとで D1 から とる）。 */
+/** その sid が kids 表に いるか（なりすましを ふせぐ かくにん）。 */
+export async function sidExists(env, sid) {
+  if (!sid) return false;
+  const row = await env.DB.prepare("SELECT 1 AS n FROM kids WHERE sid = ?1").bind(sid).first();
+  return !!(row && row.n);
+}
+
+/**
+ * Cookie から sid を とりだす。
+ *  ・署名つきトークン（いまの形）… 署名を たしかめる
+ *  ・署名が とけない Cookie … 中身（base64）から sid を とる
+ *    （SESSION_SECRET を 入れかえた ときも、アカウントを 失わない ため）
+ *  ・むきだしの sid（16〜64けたの hex）… そのまま つかう
+ * さいごに「その sid が kids に いるか」で たしかめる。sid は 128ビットの
+ * ランダムなので、実在する sid を 当てることは できない（＝なりすまし不可）。
+ */
 export async function getSid(request, env) {
-  if (!env.SESSION_SECRET) return "";
   const token = parseCookies(request)[KID_COOKIE];
   if (!token) return "";
-  const p = await readToken(env.SESSION_SECRET, token);
-  if (!p || !p.s) return "";
-  return String(p.s);
+  let sid = "";
+  if (env.SESSION_SECRET) {
+    const p = await readToken(env.SESSION_SECRET, token);
+    if (p && p.s) sid = String(p.s);
+  }
+  if (!sid && token.indexOf(".") >= 0) {
+    try {
+      const p = JSON.parse(b64urlToStr(token.split(".")[0]));
+      if (p && p.s) sid = String(p.s);
+    } catch (e) {}
+  }
+  if (!sid && /^[0-9a-f]{16,64}$/.test(token)) sid = token;
+  if (!sid) return "";
+  if (!(await sidExists(env, sid))) return "";
+  return sid;
 }
 
 export async function sidCookie(env, sid) {
@@ -174,4 +202,32 @@ export async function teacherCookie(env) {
   return cookieHeader(TEACHER_COOKIE, token, 86400);
 }
 
-export const COOKIES = { kid: KID_COOKIE, teacher: TEACHER_COOKIE };
+/* ---------- 管理者の 合言葉（ADMIN_PASS） ---------- */
+
+export function checkAdminPass(env, input) {
+  const pass = String(env.ADMIN_PASS || "").trim();
+  if (!pass) return false; // 決めていない ときは だれも 入れない（あぶないので ひらかない）
+  return sameText(pass, String(input || "").trim());
+}
+
+export async function isAdmin(request, env) {
+  if (!String(env.ADMIN_PASS || "").trim()) return false;
+  if (!env.SESSION_SECRET) return false;
+  const token = parseCookies(request)[ADMIN_COOKIE];
+  if (!token) return false;
+  const p = await readToken(env.SESSION_SECRET, token);
+  return !!(p && p.a === 1);
+}
+
+export async function adminCookie(env) {
+  const token = await signToken(env.SESSION_SECRET, { a: 1 }, 12);
+  return cookieHeader(ADMIN_COOKIE, token, 12 * 3600);
+}
+
+/** 先生か 管理者の どちらか（写真の ページで つかう）。 */
+export async function isStaff(request, env) {
+  if (await isAdmin(request, env)) return true;
+  return isTeacher(request, env);
+}
+
+export const COOKIES = { kid: KID_COOKIE, teacher: TEACHER_COOKIE, admin: ADMIN_COOKIE };

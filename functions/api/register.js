@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
   const kid = await findKid(env, sid);
   if (kid) {
     // もう とうろく ずみ。なまえは かえない。
-    return json({ ok: true, name: kid.name, changed: false });
+    return json({ ok: true, name: kid.name, changed: false, sid: kid.sid });
   }
 
   // 止められた なまえで 入りなおそうと していないか
@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
 
   const made = await createKid(env, name);
   return json(
-    { ok: true, name: made.name, changed: true },
+    { ok: true, name: made.name, changed: true, sid: made.sid },
     { headers: { "set-cookie": await sidCookie(env, made.sid) } }
   );
 }

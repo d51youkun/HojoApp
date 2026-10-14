@@ -1,295 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>まる意見｜先生用</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%232B6CA3' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23E4573D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-
   :root{
-    --ink:#1B2631;
-    --ink2:#3E4E5C;
-    --soft:#66788A;
-    --blue:#2B6CA3;
-    --verm:#E4573D;
-    --green:#3F8F63;
-    --purple:#7A5AA8;
-    --gold:#C9922B;
-    --edge:rgba(255,255,255,.72);
-    --edge-soft:rgba(255,255,255,.5);
-    --hair:rgba(27,38,49,.10);
-    --glass-hi:rgba(255,255,255,.72);
-    --glass-lo:rgba(255,255,255,.44);
-    --lift:0 1px 2px rgba(12,28,44,.07), 0 16px 40px rgba(12,28,44,.13);
-    --lift-sm:0 1px 2px rgba(12,28,44,.06), 0 8px 24px rgba(12,28,44,.10);
-    --inset:inset 0 1px 0 rgba(255,255,255,.92), inset 0 -1px 1px rgba(255,255,255,.42);
-    --r-xl:30px;
-    --r-lg:24px;
-    --r-md:18px;
-    --sheen:linear-gradient(118deg, rgba(255,255,255,.52) 0%, rgba(255,255,255,0) 32%, rgba(255,255,255,0) 70%, rgba(255,255,255,.28) 100%);
+    --ink:#1B2A36; --ink2:#3E4E5C; --soft:#7A8B99; --hair:rgba(20,40,60,.10);
+    --glass-hi:rgba(255,255,255,.74); --glass-lo:rgba(255,255,255,.46);
+    --edge:rgba(255,255,255,.72); --edge-soft:rgba(255,255,255,.52);
+    --inset:inset 0 1px 0 rgba(255,255,255,.82); --lift:0 16px 38px rgba(12,28,44,.14); --lift-sm:0 4px 14px rgba(12,28,44,.10);
+    --r-lg:26px; --r-md:16px;
   }
-
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Hiragino Sans',Meiryo,sans-serif;
-    color:var(--ink);
-    background:
-      radial-gradient(1100px 760px at 4% -8%, #DCECF8 0%, rgba(220,236,248,0) 58%),
-      radial-gradient(900px 700px at 98% 2%, #FFE3DA 0%, rgba(255,227,218,0) 56%),
-      radial-gradient(1000px 880px at 86% 98%, #E9E2F7 0%, rgba(233,226,247,0) 62%),
-      radial-gradient(900px 800px at 6% 92%, #DBF0E3 0%, rgba(219,240,227,0) 60%),
-      linear-gradient(180deg,#F9FBFD 0%,#ECF2F8 100%);
-    background-attachment:fixed;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 64px;position:relative;z-index:1;}
-
-  .bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
-  .brand{
-    display:flex;align-items:center;gap:9px;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:20px;
-    padding:9px 20px 9px 15px;border-radius:999px;
-    background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));
-    -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
-    border:1px solid var(--edge);box-shadow:var(--inset), var(--lift-sm);
-  }
-  .brand svg{display:block;filter:drop-shadow(0 2px 5px rgba(43,108,163,.32));}
-  .tag{
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:11.5px;color:#fff;
-    padding:3px 11px;border-radius:999px;
-    background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 55%), linear-gradient(180deg,#3E82BC,#1F5580);
-    border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
-  }
-  .who{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft);
-    padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.5);border:1px solid var(--edge-soft);
-    -webkit-backdrop-filter:blur(18px) saturate(170%);backdrop-filter:blur(18px) saturate(170%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.85);}
-  .who:empty{display:none;}
-  .avatar{width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,.9);background:#fff;object-fit:cover;box-shadow:0 2px 6px rgba(12,28,44,.14);}
-  .who .nm{font-weight:700;color:var(--ink);}
-  .linkbtn{background:rgba(255,255,255,.6);border:1px solid var(--edge-soft);border-radius:999px;padding:4px 11px;
-    font:inherit;font-size:12px;color:var(--ink2);cursor:pointer;transition:background .16s,color .16s;}
-  .linkbtn:hover{background:#fff;color:var(--verm);}
-
-  /* ---- 数字 ---- */
-  .stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
-  .stat{
-    position:relative;min-width:132px;padding:13px 20px;border-radius:var(--r-lg);
-    background:linear-gradient(180deg,rgba(255,255,255,.66),rgba(255,255,255,.46));
-    -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
-    border:1px solid var(--edge);box-shadow:var(--inset), var(--lift-sm);
-  }
-  .stat::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:var(--sheen);opacity:.7;}
-  .stat .k{font-size:11.5px;color:var(--soft);letter-spacing:.08em;margin-bottom:3px;}
-  .stat .v{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:27px;line-height:1.1;font-variant-numeric:tabular-nums;}
-  .stat .v small{font-size:13px;font-weight:700;margin-left:2px;color:var(--soft);}
-  .stat.wide{min-width:auto;}
-
-  /* ---- 盤面 ---- */
-  .board{
-    position:relative;border-radius:var(--r-xl);overflow:hidden;
-    background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.4));
-    -webkit-backdrop-filter:blur(34px) saturate(185%);backdrop-filter:blur(34px) saturate(185%);
-    border:1px solid var(--edge);box-shadow:var(--inset), var(--lift);
-  }
-  .board::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:var(--sheen);opacity:.55;}
-  .boardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 22px;border-bottom:1px solid var(--hair);flex-wrap:wrap;}
-  .boardhead .t{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:15.5px;}
-  .boardhead .t span{color:var(--soft);font-weight:500;font-size:12.5px;margin-left:8px;}
-  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--soft);}
-  .dot{width:8px;height:8px;border-radius:50%;background:#4CA375;box-shadow:0 0 0 4px rgba(76,163,117,.18);animation:pulse 2s infinite;}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.82)}}
-  .boardbody{display:flex;flex-wrap:wrap;}
-  .canvas{
-    flex:1 1 640px;min-width:0;padding:10px;
-    background:radial-gradient(120% 120% at 50% 40%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 62%);
-    box-shadow:inset 0 1px 6px rgba(12,28,44,.045);
-  }
-  svg.scene{display:block;width:100%;height:auto;}
-  .canvas-empty{padding:70px 20px;text-align:center;color:var(--soft);font-size:14px;line-height:2;}
-
-  .bubble{cursor:pointer;touch-action:manipulation;transition:opacity .15s;}
-  .bubble circle.ring{transition:stroke-width .14s, stroke-opacity .14s, filter .14s;}
-  .bubble:hover circle.ring{stroke-width:2.4;stroke-opacity:.95;filter:brightness(1.03);}
-  .bubble.sel circle.ring{stroke-width:3;stroke-opacity:1;}
-  .bubble text{pointer-events:none;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;dominant-baseline:middle;text-anchor:middle;}
-  .bubble .cnt{font-weight:700;opacity:.72;}
-  .bubble:focus{outline:none;}
-  .bubble:focus-visible circle.ring{stroke-width:4;stroke-opacity:1;}
-
-  /* ---- 右の パネル ---- */
-  .panel{
-    flex:0 0 344px;min-width:0;padding:20px;border-left:1px solid var(--hair);
-    background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.34));
-    -webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);
-  }
-  .panel .empty{color:var(--soft);font-size:13px;line-height:1.95;padding-top:28px;text-align:center;}
-  .phead{margin-bottom:14px;}
-  .phead .cap{font-size:11.5px;color:var(--soft);letter-spacing:.08em;margin-bottom:5px;}
-  .phead .txt{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:19px;line-height:1.45;word-break:break-word;}
-  .phead .meta{font-size:12.5px;color:var(--soft);margin-top:7px;}
-  .phead .meta b{color:var(--verm);font-size:15px;font-family:'Zen Maru Gothic',sans-serif;}
-  .tabs{
-    display:flex;gap:4px;margin-bottom:14px;padding:4px;border-radius:999px;
-    background:rgba(255,255,255,.42);border:1px solid var(--edge-soft);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.85), inset 0 2px 6px rgba(12,28,44,.05);
-  }
-  .tab{
-    flex:1;padding:8px 6px;border:none;border-radius:999px;background:none;cursor:pointer;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;color:var(--soft);
-    transition:background .16s, color .16s, box-shadow .16s;
-  }
-  .tab.on{
-    color:var(--ink);background:linear-gradient(180deg,#fff,rgba(255,255,255,.86));
-    box-shadow:0 1px 2px rgba(12,28,44,.12), inset 0 1px 0 #fff;
-  }
-  .tab .n{font-size:11.5px;opacity:.7;margin-left:4px;}
-  .list{max-height:432px;overflow-y:auto;padding-right:4px;}
-  .row{display:flex;gap:11px;padding:11px 2px;border-bottom:1px solid var(--hair);align-items:flex-start;}
-  .row:last-child{border-bottom:none;}
-  .row .avatar{width:28px;height:28px;flex:none;}
-  .row .ini{
-    width:28px;height:28px;flex:none;border-radius:50%;color:#fff;
-    display:grid;place-items:center;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13px;
-    background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 55%), linear-gradient(180deg,#3E82BC,#1F5580);
-    border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 3px 8px rgba(31,85,128,.25);
-  }
-  .row .body{min-width:0;flex:1;}
-  .row .nm{display:flex;align-items:center;gap:8px;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;}
-  .row .nm span{min-width:0;}
-  .row .rs{font-size:13px;line-height:1.75;color:var(--ink2);margin-top:4px;white-space:pre-wrap;word-break:break-word;}
-  .row .rs.none{color:var(--soft);font-size:12px;}
-  .row .op{font-size:11.5px;color:var(--soft);margin-top:5px;}
-  .del{
-    margin-left:auto;flex:none;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:11.5px;
-    color:#8C2C17;cursor:pointer;padding:4px 11px;border-radius:999px;
-    background:rgba(255,255,255,.62);border:1px solid rgba(239,182,170,.95);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 2px 6px rgba(140,44,23,.1);
-    transition:background .14s, color .14s, transform .12s;
-  }
-  .del:hover{background:#FDECE9;}
-  .del.arm{background:linear-gradient(180deg,#C8492E,#A62F19);color:#fff;border-color:rgba(255,255,255,.4);}
-  .del:disabled{opacity:.65;cursor:default;}
-
-  /* ---- 合言葉の 画面 ---- */
-  .center{
-    position:relative;max-width:470px;margin:64px auto;padding:34px 28px;text-align:center;
-    border-radius:var(--r-xl);
-    background:linear-gradient(180deg,rgba(255,255,255,.66),rgba(255,255,255,.44));
-    -webkit-backdrop-filter:blur(34px) saturate(185%);backdrop-filter:blur(34px) saturate(185%);
-    border:1px solid var(--edge);box-shadow:var(--inset), var(--lift);
-  }
-  .center::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:var(--sheen);opacity:.75;}
-  .center h2{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:21px;margin:0 0 10px;}
-  .center p{margin:0 0 20px;font-size:13.5px;color:var(--ink2);line-height:1.9;}
-  .passtxt{
-    position:relative;width:100%;margin-bottom:13px;padding:15px 16px;text-align:center;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px;color:var(--ink);
-    border-radius:var(--r-md);outline:none;
-    background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);
-    box-shadow:inset 0 2px 6px rgba(12,28,44,.07);
-    transition:background .18s, box-shadow .18s, border-color .18s;
-  }
-  .passtxt::placeholder{color:#9AAAB6;font-weight:500;}
-  .passtxt:focus{background:rgba(255,255,255,.82);border-color:rgba(43,108,163,.5);box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(43,108,163,.14);}
-  .go{
-    position:relative;display:block;width:100%;padding:16px;cursor:pointer;color:#fff;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:18px;
-    border:1px solid rgba(255,255,255,.45);border-radius:var(--r-lg);
-    background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 48%), linear-gradient(180deg,#3E82BC,#1F5580);
-    text-shadow:0 1px 2px rgba(12,40,66,.3);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 7px rgba(12,40,66,.25),
-      0 12px 26px rgba(31,85,128,.32);
-    transition:transform .12s, box-shadow .12s, filter .12s;
-  }
-  .go:hover{filter:brightness(1.05);}
-  .go:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 5px 14px rgba(31,85,128,.28);}
-  .go:focus-visible{outline:3px solid rgba(43,108,163,.55);outline-offset:3px;}
-  .notice{
-    margin-top:16px;padding:13px 15px;border-radius:var(--r-md);font-size:12.5px;line-height:1.75;text-align:left;
-    background:rgba(255,246,232,.72);border:1px solid rgba(235,207,154,.9);color:#7A5A18;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
-  }
-  .notice:empty{display:none;}
-  .notice code{background:#fff;padding:1px 5px;border-radius:6px;font-size:11.5px;border:1px solid #E3D3B4;}
-  .errbox{background:rgba(253,236,233,.8);border-color:rgba(239,182,170,.95);color:#8C2C17;}
-
-  /* ---- おしらせ ---- */
-  .toast{
-    position:fixed;left:50%;bottom:28px;transform:translate(-50%,260%);opacity:0;pointer-events:none;
-    padding:13px 26px;border-radius:999px;max-width:90vw;text-align:center;
-    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:14.5px;color:#fff;
-    background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 52%), rgba(27,38,49,.84);
-    -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
-    border:1px solid rgba(255,255,255,.28);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 14px 34px rgba(12,28,44,.34);
-    transition:transform .32s cubic-bezier(.2,.9,.3,1.25), opacity .22s;z-index:50;
-  }
-  .toast.on{transform:translate(-50%,0);opacity:1;}
-  .toast.err{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 52%), rgba(180,54,31,.86);}
-
-  @media (max-width:900px){
-    .panel{flex:1 1 100%;border-left:none;border-top:1px solid var(--hair);}
-    .list{max-height:none;}
-  }
-  @media (prefers-reduced-motion:reduce){ *{animation:none !important;transition:none !important;} }
-  @media (prefers-contrast:more){
-    .board,.stat,.panel,.center,.tabs{background:#fff;}
-    .boardhead .t span,.live,.phead .meta,.row .op,.stat .k{color:#3E4E5C;}
-    .row .rs{color:#25333D;}
-  }
-  @supports not ((-webkit-backdrop-filter:blur(2px)) or (backdrop-filter:blur(2px))){
-    .board,.stat,.center,.panel,.tabs,.who,.brand{background:rgba(255,255,255,.94);}
-    body{background:#F2F6FA;}
-  }
-
-  /* ---- 名前をおしたら 出る「どうする？」 ---- */
-  .sheetwrap{position:fixed;inset:0;background:rgba(14,28,42,.42);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
-             display:flex;align-items:flex-end;justify-content:center;padding:18px;z-index:60;}
-  .sheet{width:100%;max-width:430px;background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.75);border-radius:26px;
-         padding:18px 16px 12px;box-shadow:0 20px 50px rgba(12,28,44,.3);animation:pop .16s ease-out;}
-  @keyframes pop{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
-  .sheet .shead{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:16px;margin:0 0 13px;text-align:center;color:var(--ink);}
-  .act{display:block;width:100%;text-align:left;margin:0 0 9px;padding:13px 15px;border-radius:16px;border:1px solid var(--hair);
-       background:#fff;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;color:var(--ink);cursor:pointer;transition:.14s;}
-  .act span{display:block;font-family:system-ui,sans-serif;font-weight:500;font-size:11.5px;color:var(--soft);margin-top:3px;line-height:1.6;}
-  .act:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(12,28,44,.11);}
-  .act.danger{background:linear-gradient(180deg,#C8492E,#A62F19);color:#fff;border-color:rgba(255,255,255,.4);}
-  .act.danger span{color:rgba(255,255,255,.88);}
-  .act.danger.arm{background:linear-gradient(180deg,#7E1F0C,#5E1507);}
-  .act.cancel{background:transparent;border-color:transparent;text-align:center;color:var(--soft);font-weight:600;margin-bottom:0;}
-  .act.wipe{border-color:rgba(166,47,25,.32);color:#A62F19;background:#fff;}
-  .act.wipe span{color:#B4584A;}
-  .act.wipe.arm{background:linear-gradient(180deg,#7E1F0C,#5E1507);color:#fff;border-color:rgba(255,255,255,.4);}
-  .act.wipe.arm span{color:rgba(255,255,255,.9);}
-  .row.tap{cursor:pointer;border-radius:14px;}
-  .row.tap:hover{background:rgba(43,108,163,.06);}
-  .banrow.tap2{cursor:pointer;border-radius:14px;}
-  .banrow.tap2:hover{background:rgba(43,108,163,.06);}
-  .chip.ban{background:#FDECE9;color:#A62F19;border-color:rgba(200,73,46,.25);}
-  .chip{display:inline-block;flex:none;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;
-        background:#EAF2FA;color:#2B6CA3;border:1px solid rgba(43,108,163,.18);}
-  .chip.done{background:#E8F4EC;color:#2C6B4A;border-color:rgba(63,143,99,.22);}
-  .qa{margin-top:7px;padding:9px 11px;border-left:3px solid rgba(43,108,163,.35);background:rgba(43,108,163,.05);border-radius:0 10px 10px 0;}
-  .qa .qq{font-size:11.5px;color:var(--soft);line-height:1.7;}
-  .qa .aa{font-size:13px;line-height:1.75;color:var(--ink2);margin-top:4px;white-space:pre-wrap;word-break:break-word;}
-  .banbox{margin-top:16px;padding:15px 17px;border-radius:22px;background:rgba(255,255,255,.75);border:1px solid var(--hair);
-          -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
-  .banbox h3{margin:0 0 8px;font-family:'Zen Maru Gothic',sans-serif;font-size:14px;color:#A62F19;}
-  .banrow{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--hair);}
-  .banrow:last-child{border-bottom:none;}
-  .banrow .bn{flex:1;min-width:0;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink);}
-  .banrow .bn .why2{font-family:system-ui,sans-serif;font-weight:500;font-size:11.5px;color:var(--soft);margin-top:2px;}
-  .back{border:1px solid rgba(63,143,99,.35);background:#fff;color:#2C6B4A;font-weight:700;font-family:'Zen Maru Gothic',sans-serif;
-        font-size:12.5px;padding:7px 14px;border-radius:12px;cursor:pointer;transition:.14s;flex:none;}
-  .back:hover{background:#EAF6EF;}
-  .back:disabled{opacity:.6;cursor:default;}
-  </style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{min-height:100vh;color:var(--ink);font-family:'Zen Maru Gothic',system-ui,sans-serif;
+       background:linear-gradient(158deg,#EDF4FB 0%,#FBF3EE 48%,#F0F7F1 100%);}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+       background:radial-gradient(38% 34% at 12% 8%,rgba(228,87,61,.16),transparent 70%),
+                  radial-gradient(34% 32% at 88% 12%,rgba(43,108,163,.18),transparent 72%),
+                  radial-gradient(42% 38% at 78% 88%,rgba(63,143,99,.16),transparent 72%);}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:23px 18px 64px}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:900;font-size:20px;letter-spacing:.04em;
+         padding:9px 20px 9px 15px;border-radius:999px;background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));
+         -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+         border:1px solid var(--edge);box-shadow:var(--inset),var(--lift-sm);}
+  .tag{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(43,108,163,.13);color:#2B6CA3}
+  .who{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--soft);padding:7px 13px;border-radius:999px;
+       background:rgba(255,255,255,.52);border:1px solid var(--edge-soft);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);}
+  .who:empty{display:none}
+  .who .nm{font-weight:700;color:var(--ink)}
+  .linkbtn{background:rgba(255,255,255,.62);border:1px solid var(--edge-soft);border-radius:999px;padding:4px 11px;
+           font:inherit;font-size:12px;color:var(--ink2);cursor:pointer}
+  .center{background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:var(--r-lg);
+          padding:30px 22px;text-align:center;box-shadow:var(--inset),var(--lift);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);max-width:430px;margin:8vh auto 0}
+  .center h2{margin:0 0 8px;font-size:19px}
+  .center p{margin:0 0 16px;font-size:13.5px;color:var(--ink2);line-height:1.85}
+  .passtxt{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--hair);font:inherit;font-size:16px;
+           text-align:center;background:rgba(255,255,255,.92)}
+  .go{margin-top:13px;width:100%;padding:15px;border:none;border-radius:16px;font:inherit;font-weight:900;font-size:16px;color:#fff;cursor:pointer;
+      background:linear-gradient(180deg,#3E86C4,#245E93);box-shadow:var(--inset),0 10px 22px rgba(43,108,163,.34)}
+  .notice{margin-top:12px;font-size:12.5px;color:var(--soft)}
+  .errbox{color:#A62F19}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 0 14px}
+  .head h1{margin:0;font-size:20px}
+  .head .sub{font-size:12.5px;color:var(--soft);margin-top:3px}
+  .live{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--soft)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#4CA375;box-shadow:0 0 0 4px rgba(76,163,117,.18);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .stat{background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:var(--r-md);
+        padding:11px 16px;box-shadow:var(--inset),var(--lift-sm);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  .stat .k{font-size:11.5px;color:var(--soft)}
+  .stat .v{font-weight:900;font-size:22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:15px}
+  .pcard{background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:22px;overflow:hidden;
+         box-shadow:var(--inset),var(--lift-sm);-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);position:relative}
+  .pcard img{display:block;width:100%;height:190px;object-fit:cover;background:#fff}
+  .pbody{padding:11px 13px 13px}
+  .pname{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px}
+  .ini{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:900;color:#fff;
+       background:linear-gradient(180deg,#5C93C6,#31689B)}
+  .pmeta{font-size:11.5px;color:var(--soft);margin-top:5px}
+  .pcap{font-size:12.5px;color:var(--ink2);line-height:1.7;margin-top:6px;word-break:break-word}
+  .pdel{position:absolute;right:9px;top:9px;border:none;border-radius:999px;background:rgba(18,30,42,.6);color:#fff;font:inherit;font-size:11.5px;
+        padding:6px 11px;cursor:pointer;backdrop-filter:blur(6px)}
+  .pdel.arm{background:linear-gradient(180deg,#C8492E,#A62F19)}
+  .empty{padding:56px 20px;text-align:center;color:var(--soft);font-size:13.5px;line-height:2;
+         background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:var(--r-lg);box-shadow:var(--inset),var(--lift-sm)}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,18px);opacity:0;pointer-events:none;z-index:90;
+         background:rgba(24,38,52,.9);color:#fff;font-size:13.5px;padding:12px 20px;border-radius:999px;box-shadow:0 12px 30px rgba(12,28,44,.3);
+         transition:opacity .22s,transform .22s}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .toast.err{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 52%),rgba(180,54,31,.88)}
+  @media (max-width:560px){ .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px} .pcard img{height:150px} }
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -305,386 +94,56 @@
   </div>
 
   <section class="center" id="gateCard" style="display:none">
-    <h2 id="gateTitle">先生用の画面です</h2>
-    <p id="gateMsg">合言葉を入れると、みんなの意見が見られます。</p>
+    <h2>先生用の 画面です</h2>
+    <p>合言葉を 入れると、みんなが アップした 写真が 見られます。</p>
     <input class="passtxt" id="pass" type="password" placeholder="合言葉" autocomplete="off">
     <button class="go" id="goBtn" type="button">ひらく</button>
-    <div id="gateNotice"></div>
+    <div class="notice" id="gateNotice"></div>
   </section>
 
   <section id="main" style="display:none">
+    <div class="head">
+      <div>
+        <h1>アップされた 写真</h1>
+        <div class="sub">子どもが えらんで おくった 写真が ならびます。おすと 大きく なります</div>
+      </div>
+      <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
+    </div>
     <div class="stats">
-      <div class="stat"><div class="k">とうろくした人</div><div class="v"><span id="sTotal">0</span><small>人</small></div></div>
-      <div class="stat"><div class="k">意見の かず</div><div class="v"><span id="sCount">0</span><small>こ</small></div></div>
-      <div class="stat"><div class="k">意見のまとまり</div><div class="v"><span id="sClusters">0</span><small>こ</small></div></div>
-      <div class="stat wide"><div class="k">さいしん</div><div class="v" style="font-size:17px;padding-top:5px" id="sTime">—</div></div>
+      <div class="stat"><div class="k">写真の かず</div><div class="v"><span id="sCount">0</span></div></div>
+      <div class="stat"><div class="k">さいしん</div><div class="v" style="font-size:17px;padding-top:5px" id="sTime">—</div></div>
     </div>
-
-    <div class="board">
-      <div class="boardhead">
-        <div class="t">同じ意見ほど、まるが大きい <span><b>まるの大きさ＝意見の かず</b>（「5こ」＝その意見が 5こ おくられた）。まるをおすと 名前と理由が見られるよ。名前をおすと「どうする？」が ひらきます</span></div>
-        <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
-      </div>
-      <div class="boardbody">
-        <div class="canvas" id="canvas"></div>
-        <aside class="panel" id="panel">
-          <div class="empty">まだ まるが えらばれていないよ。<br>左の まるを おしてね。</div>
-        </aside>
-      </div>
-    </div>
-
-    <section class="banbox" id="banBox" style="display:none">
-      <h3>止めている人（Banリスト）</h3>
-      <div id="banList"></div>
-    </section>
-
-    <section class="banbox" id="kidBox" style="display:none">
-      <h3 style="color:#2B6CA3">とうろくずみの人（意見が まだの人も 出ます）</h3>
-      <div id="kidList"></div>
-    </section>
+    <div id="gridHost"></div>
   </section>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* =========================================================
-   設定（ここを書きかえる）
-   ========================================================= */
-const CONFIG = {
-  refreshMs: 5000
-};
-/* ========================================================= */
-
-const $ = (id) => document.getElementById(id);
-const VBW = 1000, VBH = 660;
-
-// ガラスみたいに すける いろ（うしろの いろが すこし 見える）
-const PALETTE = [
-  {fill:"rgba(228,87,61,.26)",  stroke:"#B8402A"},
-  {fill:"rgba(43,108,163,.26)", stroke:"#1F5580"},
-  {fill:"rgba(63,143,99,.25)",  stroke:"#2C6B4A"},
-  {fill:"rgba(122,90,168,.25)", stroke:"#5B3E8C"},
-  {fill:"rgba(201,146,43,.25)", stroke:"#8A6414"}
-];
-
-let clusters = [];
-let selectedId = null;
-let activeTab = "people";
-let currentUser = null;
+const $ = function(id){ return document.getElementById(id); };
+const REFRESH_MS = 5000;
+let photos = [];
+let opened = false;
 let timer = null;
+let toastTimer = null;
 
-/* ---------- 小物 ---------- */
 function esc(s){
-  return String(s == null ? "" : s)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c];
+  });
 }
-function svgEsc(s){ return esc(s); }
 function initial(name){
   const n = String(name || "?").trim();
-  return n ? n.slice(0,1) : "?";
+  return esc(n ? Array.from(n)[0] : "?");
 }
-
-/* ---------- 丸の配置（すきまなく ならべる） ---------- */
-function spiralPack(radii, W, H, margin){
-  const order = radii.map(function(r,i){ return {r:r, i:i}; }).sort(function(a,b){ return b.r - a.r; });
-  const pos = new Array(radii.length);
-  const placed = [];
-  const cx = W/2, cy = H/2;
-
-  for (let k = 0; k < order.length; k++){
-    const item = order[k];
-    const r = item.r;
-    let hit = false;
-
-    if (placed.length === 0){
-      pos[item.i] = { x: cx, y: cy };
-      placed.push({ x: cx, y: cy, r: r });
-      continue;
-    }
-
-    for (let t = 0; t < 6000 && !hit; t++){
-      const rad = 0.85 * Math.sqrt(t) * (t < 30 ? 5 : 4);
-      const ang = t * 0.62;
-      const x = cx + rad * Math.cos(ang);
-      const y = cy + rad * Math.sin(ang) * 0.74;
-      if (x - r < margin || x + r > W - margin || y - r < margin || y + r > H - margin) continue;
-      let clear = true;
-      for (let p = 0; p < placed.length; p++){
-        const q = placed[p];
-        const dx = q.x - x, dy = q.y - y;
-        if (dx*dx + dy*dy < (q.r + r + 4) * (q.r + r + 4)) { clear = false; break; }
-      }
-      if (clear){
-        pos[item.i] = { x: x, y: y };
-        placed.push({ x: x, y: y, r: r });
-        hit = true;
-      }
-    }
-    if (!hit) return null;
-  }
-  return pos;
-}
-
-function gridPack(radii, W, H){
-  const cols = Math.ceil(Math.sqrt(radii.length * (W/H)));
-  const rows = Math.ceil(radii.length / cols);
-  const cw = W / cols, ch = H / rows;
-  return radii.map(function(r, i){
-    const c = i % cols, ro = Math.floor(i / cols);
-    return { x: cw*(c+0.5), y: ch*(ro+0.5) };
-  });
-}
-
-function layout(n, counts){
-  const W = VBW, H = VBH;
-  const sum = counts.reduce(function(a,b){ return a + b; }, 0);
-  // 円が おおきすぎないように：つかう めんせきを 20%に おさえ、
-  // 半径は 250 で うちどめる（人が ふえても はみださない）。
-  const target = 0.14 * W * H;   // 画面の つかいかた（小さいほど 丸が 小さい。0.20→0.14）
-  const k = Math.sqrt(target / (Math.PI * sum));
-
-  let radii = counts.map(function(v){ return Math.min(210, Math.max(36, k * Math.sqrt(v))); });
-  let pos = null;
-
-  for (let attempt = 0; attempt < 14; attempt++){
-    pos = spiralPack(radii, W, H, 12);
-    if (pos) break;
-    radii = radii.map(function(r){ return r * 0.92; });
-  }
-  if (!pos){ radii = radii.map(function(r){ return Math.max(36, r * 0.7); }); pos = gridPack(radii, W, H); }
-
-  // 文字が小さくなりすぎないよう、全体を上にスケールして はみ出さない分だけ使う
-  let maxX = 0, maxY = 0, minX = W, minY = H;
-  pos.forEach(function(p, i){
-    maxX = Math.max(maxX, p.x + radii[i]); minX = Math.min(minX, p.x - radii[i]);
-    maxY = Math.max(maxY, p.y + radii[i]); minY = Math.min(minY, p.y - radii[i]);
-  });
-  const sx = (W - 20) / Math.max(1, maxX - minX);
-  const sy = (H - 20) / Math.max(1, maxY - minY);
-  const s = Math.min(1.0, sx, sy);    // 丸の 大きさ（縮めるだけ）
-  const sp = Math.min(1.45, sx, sy);  // ならべ方（位置）は 広げて 画面を つかう
-  if (s !== 1 || sp !== 1){
-    radii = radii.map(function(r){ return r * s; });
-    pos = pos.map(function(p, i){
-      var x = (p.x - minX) * sp + 10;
-      var y = (p.y - minY) * sp + 10;
-      return { x: Math.min(Math.max(x, 10 + radii[i]), W - 10 - radii[i]),
-               y: Math.min(Math.max(y, 10 + radii[i]), H - 10 - radii[i]) };
-    });
-  }
-  return { radii: radii, pos: pos };
-}
-
-/* ---------- 文字を おる ---------- */
-function wrap(text, fontSize, maxWidth, maxLines){
-  const perChar = fontSize;
-  const perLine = Math.max(2, Math.floor(maxWidth / perChar));
-  const chars = Array.from(String(text || ""));
-  const lines = [];
-  let cur = "";
-  for (let i = 0; i < chars.length; i++){
-    cur += chars[i];
-    if (cur.length >= perLine){ lines.push(cur); cur = ""; if (lines.length === maxLines) break; }
-  }
-  if (cur && lines.length < maxLines) lines.push(cur);
-  if (lines.length === 0) lines.push("");
-  const used = lines.join("").length;
-  if (used < chars.length){
-    const last = lines[lines.length - 1];
-    lines[lines.length - 1] = last.slice(0, Math.max(1, last.length - 1)) + "…";
-  }
-  return lines;
-}
-
-/* ---------- えがく ---------- */
-function render(){
-  const host = $("canvas");
-  if (!clusters.length){
-    host.innerHTML = '<div class="canvas-empty">まだ 意見が あつまっていないよ。<br>子どもたちが おくると、ここに まるが 出るよ。</div>';
-    return;
-  }
-
-  // まるの 大きさ ＝ 「意見の かず」（人が 何人か ではなく、意見が 何こ か）
-  const counts = clusters.map(function(c){ return Math.max(1, c.posts || c.count); });
-  const L = layout(clusters.length, counts);
-  const radii = L.radii, pos = L.pos;
-
-  let out = '';
-  out += '<svg class="scene" viewBox="0 0 ' + VBW + ' ' + VBH + '" role="list" aria-label="意見のまとまり">';
-  out += '<defs>'
-      +  '<radialGradient id="spec" cx="34%" cy="26%" r="66%">'
-      +    '<stop offset="0%" stop-color="#FFFFFF" stop-opacity=".9"/>'
-      +    '<stop offset="46%" stop-color="#FFFFFF" stop-opacity=".3"/>'
-      +    '<stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>'
-      +  '</radialGradient>'
-      +  '<filter id="drop" x="-30%" y="-30%" width="160%" height="160%">'
-      +    '<feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#0C1C2C" flood-opacity=".2"/>'
-      +  '</filter>'
-      +  '</defs>';
-
-  for (let i = 0; i < clusters.length; i++){
-    const c = clusters[i];
-    const r = radii[i];
-    const p = pos[i];
-    const col = PALETTE[i % PALETTE.length];
-    const isSel = c.id === selectedId;
-
-    const labelSize = Math.max(14, Math.min(30, r * 0.26));
-    const maxW = r * 1.62;
-    const maxLines = r > 44 ? 3 : (r > 28 ? 2 : 1);   // 文字が 切れない ように 行を ゆるく
-    const lines = wrap(c.label, labelSize, maxW, maxLines);
-    const lineH = labelSize * 1.22;
-    const cntText = (c.posts || 0) + "こ";
-    const cntSize = Math.max(12.5, Math.min(21, r * 0.18));
-
-    const blockH = lines.length * lineH + cntSize * 1.5;
-    let y0 = p.y - blockH / 2 + lineH * 0.62;
-
-    out += '<g class="bubble' + (isSel ? ' sel' : '') + '" data-id="' + c.id + '" tabindex="0" role="listitem" '
-        +  'aria-label="' + svgEsc(c.label + "、" + c.count + "人") + '" transform="translate(' + p.x.toFixed(1) + ',' + p.y.toFixed(1) + ')">';
-    out += '<circle class="ring" r="' + r.toFixed(1) + '" fill="' + col.fill + '" stroke="' + col.stroke + '" stroke-width="' + (isSel ? 3 : 1.6) + '" stroke-opacity="' + (isSel ? 1 : .62) + '" filter="url(#drop)"/>'
-        +  '<circle r="' + (r - 1).toFixed(1) + '" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="1.6"/>'
-        +  '<circle r="' + r.toFixed(1) + '" fill="url(#spec)" pointer-events="none"/>'
-        +  '<ellipse cx="' + (-r * 0.34).toFixed(1) + '" cy="' + (-r * 0.44).toFixed(1) + '" rx="' + (r * 0.26).toFixed(1) + '" ry="' + (r * 0.12).toFixed(1) + '" fill="#FFFFFF" opacity=".32" pointer-events="none"/>';
-    out += '<circle r="' + r.toFixed(1) + '" fill="url(#shine)" pointer-events="none"/>';
-    for (let li = 0; li < lines.length; li++){
-      out += '<text x="0" y="' + (y0 - p.y + li * lineH).toFixed(1) + '" font-size="' + labelSize.toFixed(1) + '" fill="' + col.stroke + '">'
-          + svgEsc(lines[li]) + '</text>';
-    }
-    out += '<text class="cnt" x="0" y="' + (y0 - p.y + lines.length * lineH + cntSize * 0.55).toFixed(1) + '" '
-        +  'font-size="' + cntSize.toFixed(1) + '" fill="' + col.stroke + '">' + svgEsc(cntText) + '</text>';
-    out += '</g>';
-  }
-  out += '</svg>';
-  host.innerHTML = out;
-
-  Array.prototype.forEach.call(host.querySelectorAll(".bubble"), function(el){
-    el.addEventListener("click", function(){ select(el.getAttribute("data-id")); });
-    el.addEventListener("keydown", function(e){
-      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); select(el.getAttribute("data-id")); }
-    });
-  });
-}
-
-/* ---------- おしらせ（トースト） ---------- */
-let toastTimer = null;
 function toast(msg, isError){
   const t = $("toast");
-  if (!t) return;
   t.textContent = msg;
   t.classList.toggle("err", !!isError);
   t.classList.add("on");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ t.classList.remove("on"); }, 2400);
+  toastTimer = setTimeout(function(){ t.classList.remove("on"); }, 2600);
 }
-
-/* ---------- 詳細パネル ---------- */
-function select(id){
-  selectedId = id;
-  render();
-  drawPanel();
-}
-
-function drawPanel(){
-  const panel = $("panel");
-  const c = clusters.filter(function(x){ return x.id === selectedId; })[0];
-  if (!c){
-    panel.innerHTML = '<div class="empty">まだ まるが えらばれていないよ。<br>左の まるを おしてね。</div>';
-    return;
-  }
-
-  let html = '<div class="phead">'
-    + '<div class="cap">意見</div>'
-    + '<div class="txt">' + esc(c.label) + '</div>'
-    + '<div class="meta">この 意見 <b>' + (c.posts || 0) + '</b> こ ／ <b>' + c.count + '</b> 人が 出した</div>'
-    + '</div>';
-
-  html += '<div class="tabs">'
-    + '<button class="tab' + (activeTab === "people" ? " on" : "") + '" data-tab="people" type="button">名前<span class="n">' + c.count + '</span></button>'
-    + '<button class="tab' + (activeTab === "reasons" ? " on" : "") + '" data-tab="reasons" type="button">意見<span class="n">' + (c.posts || 0) + '</span></button>'
-    + '</div>';
-
-  html += '<div class="list">';
-  if (activeTab === "people"){
-    c.members.forEach(function(m){
-      html += '<div class="row tap" data-sid="' + esc(String(m.sid || "")) + '" data-name="' + esc(m.name) + '" title="おすと「どうする？」が ひらく">'
-        + '<div class="ini">' + esc(initial(m.name)) + '</div>'
-        + '<div class="body"><div class="nm"><span>' + esc(m.name) + '</span>' + askChip(m.sid) + '</div>'
-        + askDetail(m.sid)
-        + '</div>'
-        + '</div>';
-    });
-  } else {
-    c.reasons.forEach(function(r){
-      html += '<div class="row tap" data-sid="' + esc(String(r.sid || "")) + '" data-name="' + esc(r.name) + '" title="おすと「どうする？」が ひらく">'
-        + '<div class="ini">' + esc(initial(r.name)) + '</div>'
-        + '<div class="body">'
-        + '<div class="nm"><span>' + esc(r.name) + '</span>'
-        + '<button class="del" data-id="' + esc(String(r.id)) + '" type="button" aria-label="この意見をけす">けす</button></div>'
-        + (String(r.reason || "").trim()
-            ? '<div class="rs">' + esc(r.reason) + '</div>'
-            : '<div class="rs none">（理由は かいてない）</div>')
-        + (String(r.opinion) !== String(c.label) ? '<div class="op">意見：' + esc(r.opinion) + '</div>' : '')
-        + '</div></div>';
-    });
-  }
-  html += '</div>';
-  panel.innerHTML = html;
-
-  Array.prototype.forEach.call(panel.querySelectorAll(".tab"), function(btn){
-    btn.addEventListener("click", function(){
-      activeTab = btn.getAttribute("data-tab");
-      drawPanel();
-    });
-  });
-
-  // 名前（の行）をおしたら「どうする？」を ひらく
-  Array.prototype.forEach.call(panel.querySelectorAll(".row.tap"), function(row){
-    row.addEventListener("click", function(){
-      openActions(row.getAttribute("data-sid"), row.getAttribute("data-name"));
-    });
-  });
-
-  // 「けす」は 2回おして はじめて けれる（まちがえて けさないように）
-  Array.prototype.forEach.call(panel.querySelectorAll(".del"), function(btn){
-    btn.addEventListener("click", async function(ev){
-      ev.stopPropagation();
-      if (btn.getAttribute("data-arm") !== "1"){
-        btn.setAttribute("data-arm", "1");
-        btn.textContent = "ほんとに？";
-        btn.classList.add("arm");
-        setTimeout(function(){
-          if (btn.isConnected){
-            btn.removeAttribute("data-arm");
-            btn.textContent = "けす";
-            btn.classList.remove("arm");
-          }
-        }, 4000);
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = "けしてる…";
-      const rr = await api("/api/submission", {
-        method: "DELETE",
-        body: JSON.stringify({ id: Number(btn.getAttribute("data-id")) })
-      });
-      if (rr.res.ok && rr.data && rr.data.ok){
-        toast("1つ けしたよ（" + (rr.data.name || "") + "）");
-        await loadBoard();
-      } else {
-        toast((rr.data && rr.data.error) || "けせませんでした", true);
-        btn.disabled = false;
-        btn.textContent = "けす";
-        btn.removeAttribute("data-arm");
-        btn.classList.remove("arm");
-      }
-    });
-  });
-}
-
-/* ---------- データ ---------- */
 async function api(path, options){
   const res = await fetch(path, Object.assign({
     headers: { "content-type": "application/json" },
@@ -695,354 +154,115 @@ async function api(path, options){
   return { res: res, data: data };
 }
 
-async function loadBoard(){
-  const r = await api("/api/board");
+function render(){
+  const host = $("gridHost");
+  $("sCount").textContent = photos.length;
+  if (!photos.length){
+    host.innerHTML = '<div class="empty">まだ 写真が ありません。<br>子どもが 写真を アップすると、ここに ならびます。</div>';
+    return;
+  }
+  let html = '<div class="grid">';
+  photos.forEach(function(p){
+    const when = String(p.created_at || "").slice(5, 16).replace("T", " ");
+    html += '<div class="pcard">'
+      + '<a href="/api/photo?id=' + encodeURIComponent(p.id) + '" target="_blank" rel="noopener">'
+      + '<img src="/api/photo?id=' + encodeURIComponent(p.id) + '" alt="' + esc(p.name) + ' さんの 写真" loading="lazy"></a>'
+      + '<button class="pdel" data-id="' + esc(String(p.id)) + '" type="button">けす</button>'
+      + '<div class="pbody">'
+      + '<div class="pname"><span class="ini">' + initial(p.name) + '</span>' + esc(p.name) + '</div>'
+      + '<div class="pmeta">' + esc(when) + '</div>'
+      + (p.caption ? '<div class="pcap">' + esc(p.caption) + '</div>' : '')
+      + '</div></div>';
+  });
+  html += '</div>';
+  host.innerHTML = html;
+
+  Array.prototype.forEach.call(host.querySelectorAll(".pdel"), function(btn){
+    btn.addEventListener("click", async function(ev){
+      ev.preventDefault();
+      if (btn.getAttribute("data-arm") !== "1"){
+        btn.setAttribute("data-arm", "1");
+        btn.textContent = "ほんとに？";
+        btn.classList.add("arm");
+        setTimeout(function(){
+          if (btn.isConnected){ btn.removeAttribute("data-arm"); btn.textContent = "けす"; btn.classList.remove("arm"); }
+        }, 4000);
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "けしてる…";
+      const r = await api("/api/photos", { method: "DELETE", body: JSON.stringify({ id: Number(btn.getAttribute("data-id")) }) });
+      if (r.res.ok && r.data && r.data.ok){ toast("1まい けしたよ（" + (r.data.name || "") + "）"); await loadPhotos(); }
+      else {
+        toast((r.data && r.data.error) || "けせませんでした", true);
+        btn.disabled = false; btn.textContent = "けす"; btn.removeAttribute("data-arm"); btn.classList.remove("arm");
+      }
+    });
+  });
+}
+
+async function loadPhotos(){
+  const r = await api("/api/photos");
   if (!r.res.ok){
     stopAuto();
-    if (r.res.status === 401 || r.res.status === 403) {
-      showGate((r.data && r.data.error) || "");
-      return;
-    }
+    if (r.res.status === 401 || r.res.status === 403){ showGate((r.data && r.data.error) || ""); return; }
     $("liveTxt").textContent = "読みこめませんでした";
     return;
   }
-  const d = r.data;
-
-  const scrollTop = $("panel").scrollTop;
-  clusters = d.clusters || [];
-  if (selectedId && !clusters.some(function(c){ return c.id === selectedId; })) selectedId = null;
-
-  $("sTotal").textContent = (d.people == null ? d.total : d.people);
-  $("sCount").textContent = d.total;
-  $("sClusters").textContent = d.clusterCount;
-  $("sTime").textContent = new Date(d.updatedAt).toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-  $("liveTxt").textContent = d.method === "ai"
-    ? "AIで まとめ中（にている度 " + d.threshold + "）"
-    : "文字で まとめ中";
-
+  photos = (r.data && r.data.photos) || [];
+  $("sTime").textContent = new Date().toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+  $("liveTxt").textContent = "じどうで こうしん中";
   render();
-  drawPanel();
-  $("panel").scrollTop = scrollTop;
   $("main").style.display = "block";
   $("gateCard").style.display = "none";
-  loadAdmin();
 }
-
-function startAuto(){
-  stopAuto();
-  timer = setInterval(loadBoard, CONFIG.refreshMs);
-}
+function startAuto(){ stopAuto(); timer = setInterval(loadPhotos, REFRESH_MS); }
 function stopAuto(){ if (timer){ clearInterval(timer); timer = null; } }
 document.addEventListener("visibilitychange", function(){
   if (document.hidden) stopAuto();
-  else if (opened) { loadBoard(); startAuto(); }
+  else if (opened){ loadPhotos(); startAuto(); }
 });
-
-/* ---------- 画面 ---------- */
-let opened = false;
 
 function showGate(msg){
   opened = false;
+  stopAuto();
   $("main").style.display = "none";
   $("gateCard").style.display = "block";
-  $("gateNotice").innerHTML = msg ? '<div class="notice errbox">' + esc(msg) + '</div>' : "";
+  $("gateNotice").innerHTML = msg ? '<div class="errbox">' + esc(msg) + '</div>' : "";
   $("pass").focus();
 }
-
 function setWho(label){
   const box = $("whoBox");
   if (!label){ box.innerHTML = ""; return; }
   box.innerHTML = '<span class="nm"></span><button class="linkbtn" id="logoutBtn" type="button">とじる</button>';
   box.querySelector(".nm").textContent = label;
   $("logoutBtn").addEventListener("click", async function(){
-    await api("/api/logout", { method:"POST" });
+    await api("/api/logout", { method: "POST" });
     location.reload();
   });
 }
-
 async function openGate(){
   const pass = $("pass").value.trim();
   if (!pass){ showGate("合言葉を 入れてね"); return; }
-  const r = await api("/api/teacher", { method:"POST", body: JSON.stringify({ pass: pass }) });
-  if (!r.data || !r.data.ok){
-    showGate((r.data && r.data.error) || "合言葉が ちがいます");
-    return;
-  }
+  const r = await api("/api/teacher", { method: "POST", body: JSON.stringify({ pass: pass }) });
+  if (!r.data || !r.data.ok){ showGate((r.data && r.data.error) || "合言葉が ちがいます"); return; }
   $("pass").value = "";
   await boot();
 }
 $("goBtn").addEventListener("click", openGate);
-$("pass").addEventListener("keydown", function(e){
-  if (e.key === "Enter"){ e.preventDefault(); openGate(); }
-});
+$("pass").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); openGate(); } });
 
 async function boot(){
   setWho("");
   try {
-    await loadBoard();
-    if ($("main").style.display !== "none"){
-      opened = true;
-      setWho("先生");
-      startAuto();
-    } else {
-      showGate("");
-    }
+    await loadPhotos();
+    if ($("main").style.display !== "none"){ opened = true; setWho("先生"); startAuto(); }
+    else showGate("");
   } catch (e) {
-    // つながらない ときも、まっしろに しないで 合言葉の カードを 出す
     showGate("つながりませんでした。ページを ひらきなおしてね");
   }
 }
-
 window.addEventListener("load", boot);
-
-/* =========================================================
-   v6：先生の「どうする？」（理由をきく／詳しくお願いする／Ban!!）
-   ========================================================= */
-var askMap = {};    // sid -> [しつもん…]
-var banList = [];   // 止めている人
-var kidsList = [];  // とうろくずみの人
-
-async function loadAdmin(){
-  try {
-    const rs = await Promise.all([api("/api/ask"), api("/api/ban"), api("/api/kids")]);
-    askMap = {};
-    ((rs[0].data && rs[0].data.asks) || []).forEach(function(a){
-      if (!askMap[a.sid]) askMap[a.sid] = [];
-      askMap[a.sid].push(a);
-    });
-    banList = (rs[1].data && rs[1].data.bans) || [];
-    kidsList = (rs[2].data && rs[2].data.kids) || [];
-    const st = $("panel").scrollTop;
-    drawPanel();
-    $("panel").scrollTop = st;
-    drawBans();
-    drawKids();
-  } catch (e) {}
-}
-
-function askListOf(sid){
-  return askMap[String(sid || "")] || [];
-}
-
-function askChip(sid){
-  const list = askListOf(sid);
-  if (!list.length) return "";
-  const open = list.filter(function(a){ return !a.answered; }).length;
-  const done = list.length - open;
-  let out = "";
-  if (open) out += '<span class="chip">しつもん中 ' + open + '</span>';
-  if (done) out += '<span class="chip done">こたえた ' + done + '</span>';
-  return out;
-}
-
-function askDetail(sid){
-  const list = askListOf(sid);
-  if (!list.length) return "";
-  let out = "";
-  list.slice(0, 4).forEach(function(a){
-    out += '<div class="qa"><div class="qq">' + esc(a.text) + '</div>'
-      + (a.answered
-          ? '<div class="aa">' + esc(a.answer) + '</div>'
-          : '<div class="aa" style="color:var(--soft)">まだ こたえを まっています…</div>')
-      + '</div>';
-  });
-  return out;
-}
-
-/** その人の いちばん 新しい 意見の 番号（しつもんを 意見に くっつける ため） */
-function latestSubmissionIdOf(sid){
-  let best = 0;
-  (clusters || []).forEach(function(c){
-    (c.reasons || []).forEach(function(r){
-      if (String(r.sid) === String(sid) && Number(r.id) > best) best = Number(r.id);
-    });
-  });
-  return best || null;
-}
-
-/** 「アカウントを けす」で 何が 消えるかを 先に 見せる */
-function wipeInfo(sid){
-  const k = (kidsList || []).filter(function(x){ return String(x.sid) === String(sid); })[0];
-  const posts = k ? (k.posts || 0) : 0;
-  const asks = askListOf(sid).length;
-  return "この人の 名前・意見 " + posts + "こ・しつもん " + asks + "こ";
-}
-
-function openActions(sid, name){  if (!sid){ toast("この人は 名指しできません（意見が ありません）", true); return; }
-  const old = document.getElementById("actSheet");
-  if (old) old.remove();
-
-  const box = document.createElement("div");
-  box.className = "sheetwrap";
-  box.id = "actSheet";
-  box.innerHTML =
-    '<div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(name) + ' さんを どうする？">'
-    + '<div class="shead">' + esc(name) + ' さんを どうする？</div>'
-    + '<button class="act" data-act="reason" type="button">理由を きく<span>なぜ そう 思ったのか、もういちど 聞きます</span></button>'
-    + '<button class="act" data-act="detail" type="button">詳しく お願いする<span>もっと 詳しく 説明して もらいます</span></button>'
-    + '<button class="act danger" data-act="ban" type="button">Ban!!<span>アカウントを 止めます。あとで 復旧できます</span></button>'
-    + '<button class="act wipe" data-act="wipe" type="button">アカウントを けす<span>' + esc(wipeInfo(sid)) + ' を 消します（もどせません）</span></button>'
-    + '<button class="act cancel" data-act="cancel" type="button">やめる</button>'
-    + '</div>';
-  document.body.appendChild(box);
-  box.addEventListener("click", function(ev){ if (ev.target === box) box.remove(); });
-
-  const close = function(){ box.remove(); };
-
-  const sendAsk = async function(btn, kind){
-    if (btn.disabled) return;
-    btn.disabled = true;
-    const before = btn.innerHTML;
-    btn.textContent = "おくってる…";
-    const r = await api("/api/ask", {
-      method: "POST",
-      body: JSON.stringify({ sid: sid, kind: kind, submission_id: latestSubmissionIdOf(sid) })
-    });
-    if (r.res.ok && r.data && r.data.ok){
-      toast(name + " さんに おくったよ");
-      close();
-      await loadAdmin();
-    } else {
-      toast((r.data && r.data.error) || "おくれませんでした", true);
-      btn.disabled = false;
-      btn.innerHTML = before;
-    }
-  };
-
-  Array.prototype.forEach.call(box.querySelectorAll(".act"), function(btn){
-    btn.addEventListener("click", async function(){
-      const act = btn.getAttribute("data-act");
-      if (act === "cancel"){ close(); return; }
-      if (act === "reason" || act === "detail"){ await sendAsk(btn, act); return; }
-
-      // アカウント削除（もどせない）。Ban とは べつ。
-      if (act === "wipe"){
-        if (btn.getAttribute("data-arm") !== "1"){
-          btn.setAttribute("data-arm", "1");
-          btn.innerHTML = 'ほんとに 消す？<span>' + esc(wipeInfo(sid)) + ' を 消します。もどせません</span>';
-          setTimeout(function(){
-            if (btn.isConnected){
-              btn.removeAttribute("data-arm");
-              btn.innerHTML = 'アカウントを けす<span>' + esc(wipeInfo(sid)) + ' を 消します（もどせません）</span>';
-            }
-          }, 5000);
-          return;
-        }
-        btn.disabled = true;
-        btn.innerHTML = "消してる…";
-        const rr = await api("/api/account", { method: "DELETE", body: JSON.stringify({ sid: sid }) });
-        if (rr.res.ok && rr.data && rr.data.ok){
-          toast(name + " さんの アカウントを 消したよ（意見 " + (rr.data.posts || 0) + "こ・しつもん " + (rr.data.asks || 0) + "こ）");
-          close();
-          await loadAdmin();
-          await loadBoard();
-        } else {
-          toast((rr.data && rr.data.error) || "消せませんでした", true);
-          btn.disabled = false;
-          btn.innerHTML = 'アカウントを けす<span>' + esc(wipeInfo(sid)) + ' を 消します（もどせません）</span>';
-          btn.removeAttribute("data-arm");
-        }
-        return;
-      }
-
-      if (act !== "ban") return;
-
-      // Ban!! は 2回おして はじめて 止まる（まちがえて 止めないように）
-      if (btn.getAttribute("data-arm") !== "1"){
-        btn.setAttribute("data-arm", "1");
-        btn.innerHTML = "ほんとに 止める？<span>もういちど おすと 止まります</span>";
-        setTimeout(function(){
-          if (btn.isConnected){
-            btn.removeAttribute("data-arm");
-            btn.innerHTML = "Ban!!<span>アカウントを 止めます。あとで 復旧できます</span>";
-          }
-        }, 4000);
-        return;
-      }
-      btn.disabled = true;
-      btn.innerHTML = "止めてる…";
-      const r = await api("/api/ban", { method: "POST", body: JSON.stringify({ sid: sid, name: name }) });
-      if (r.res.ok && r.data && r.data.ok){
-        toast(name + " さんを 止めたよ（Banリストから もどせます）");
-        close();
-        await loadAdmin();
-        await loadBoard();
-      } else {
-        toast((r.data && r.data.error) || "止められませんでした", true);
-        btn.disabled = false;
-        btn.innerHTML = "Ban!!<span>アカウントを 止めます。あとで 復旧できます</span>";
-        btn.removeAttribute("data-arm");
-      }
-    });
-  });
-}
-
-function drawBans(){
-  const box = $("banBox");
-  const list = $("banList");
-  if (!box || !list) return;
-  if (!banList.length){ box.style.display = "none"; list.innerHTML = ""; return; }
-  let html = "";
-  banList.forEach(function(b){
-    html += '<div class="banrow">'
-      + '<div class="ini">' + esc(initial(b.name)) + '</div>'
-      + '<div class="bn">' + esc(b.name)
-      + (b.reason ? '<div class="why2">' + esc(b.reason) + '</div>' : '')
-      + '</div>'
-      + '<button class="back" data-sid="' + esc(String(b.sid)) + '" type="button">復旧</button>'
-      + '</div>';
-  });
-  list.innerHTML = html;
-  box.style.display = "block";
-
-  Array.prototype.forEach.call(list.querySelectorAll(".back"), function(btn){
-    btn.addEventListener("click", async function(){
-      btn.disabled = true;
-      btn.textContent = "もどしてる…";
-      const r = await api("/api/ban", {
-        method: "DELETE",
-        body: JSON.stringify({ sid: btn.getAttribute("data-sid") })
-      });
-      if (r.res.ok && r.data && r.data.ok){
-        toast((r.data.name || "") + " さんを もどしたよ");
-        await loadAdmin();
-        await loadBoard();
-      } else {
-        toast((r.data && r.data.error) || "もどせませんでした", true);
-        btn.disabled = false;
-        btn.textContent = "復旧";
-      }
-    });
-  });
-}
-/* ---------- とうろくずみの人の リスト ---------- */
-function drawKids(){
-  const box = $("kidBox");
-  const list = $("kidList");
-  if (!box || !list) return;
-  if (!kidsList.length){ box.style.display = "none"; list.innerHTML = ""; return; }
-
-  let html = "";
-  kidsList.forEach(function(k){
-    const when = String(k.created_at || "").slice(5, 16).replace("T", " ");
-    html += '<div class="banrow tap2" data-sid="' + esc(String(k.sid)) + '" data-name="' + esc(k.name) + '" title="おすと「どうする？」が ひらく">'
-      + '<div class="ini">' + esc(initial(k.name)) + '</div>'
-      + '<div class="bn">' + esc(k.name)
-      + '<div class="why2">意見 ' + k.posts + '件' + (when ? ' ・ とうろく ' + esc(when) : '') + '</div>'
-      + '</div>'
-      + (k.banned ? '<span class="chip ban">Ban中</span>' : (askChip(k.sid) || '<span class="chip">まだ 意見なし</span>'))
-      + '</div>';
-  });
-  list.innerHTML = html;
-  box.style.display = "block";
-
-  Array.prototype.forEach.call(list.querySelectorAll(".tap2"), function(row){
-    row.addEventListener("click", function(){
-      openActions(row.getAttribute("data-sid"), row.getAttribute("data-name"));
-    });
-  });
-}
-
 </script>
 </body>
 </html>

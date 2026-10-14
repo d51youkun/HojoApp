@@ -6,19 +6,19 @@
 // kind = "reason"  → 「理由を きく」
 // kind = "detail"  → 「詳しく お願いする」
 
-import { json, fail, isTeacher } from "../_lib/auth.js";
+import { json, fail, isAdmin } from "../_lib/auth.js";
 import { findKid } from "../_lib/kids.js";
 import { createAsk, listAllAsks } from "../_lib/rules.js";
 
 export async function onRequestGet({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
   return json({ ok: true, asks: await listAllAsks(env) });
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
 

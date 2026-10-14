@@ -48,6 +48,27 @@ CREATE TABLE IF NOT EXISTS bans (
 
 CREATE INDEX IF NOT EXISTS idx_bans_name ON bans(name);
 
+-- アプリの せってい（見出しの ことば など）。k ごとに 1行。
+CREATE TABLE IF NOT EXISTS settings (
+  k          TEXT PRIMARY KEY,      -- 例: "history_theme"
+  v          TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- 子どもが アップした 写真（オプション）。ブラウザで 小さくしてから 入る。
+CREATE TABLE IF NOT EXISTS photos (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  sid        TEXT NOT NULL,         -- アップした人
+  name       TEXT NOT NULL,         -- その人の なまえ
+  caption    TEXT NOT NULL DEFAULT '',
+  data       TEXT NOT NULL,         -- data:image/jpeg;base64,…（小さくした もの）
+  bytes      INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_photos_created ON photos(created_at);
+CREATE INDEX IF NOT EXISTS idx_photos_sid ON photos(sid);
+
 -- 意見の「意味の数値（ベクトル）」をためておく場所。
 -- 同じ意見を何度も Workers AI に送らないようにするためのメモ。
 CREATE TABLE IF NOT EXISTS opinion_vectors (

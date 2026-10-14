@@ -4,19 +4,19 @@
 // POST   … 止める { sid, name?, reason? }（先生だけ）
 // DELETE … もどす（復旧） { sid }（先生だけ）
 
-import { json, fail, isTeacher } from "../_lib/auth.js";
+import { json, fail, isAdmin } from "../_lib/auth.js";
 import { findKid } from "../_lib/kids.js";
 import { listBans, banKid, unbanKid, findBan } from "../_lib/rules.js";
 
 export async function onRequestGet({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
   return json({ ok: true, bans: await listBans(env) });
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
 
@@ -40,7 +40,7 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
 

@@ -7,11 +7,11 @@
 // 消された 子どもは、つぎから 「なまえ」を 入れなおす ことになる。
 // （Cookie は のこるが、kids の行が ないので とうろくずみ では なくなる）
 
-import { json, fail, isTeacher } from "../_lib/auth.js";
+import { json, fail, isAdmin } from "../_lib/auth.js";
 import { deleteAccount } from "../_lib/kids.js";
 
 export async function onRequestDelete({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
 

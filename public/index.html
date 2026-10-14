@@ -243,7 +243,78 @@
     .deco{display:none;}
   }
 
-  /* ---- 先生からの しつもん ---- */
+  /* ---- 写真（オプション） ---- */
+let photoData = null, photoBytes = 0;
+
+function shrink(file){
+  return new Promise(function(res, rej){
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = function(){
+      const tries = [[1000,.72],[800,.62],[620,.55],[460,.5]];
+      let out = null;
+      for (let i = 0; i < tries.length; i++){
+        const max = tries[i][0], q = tries[i][1];
+        const s = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        const g = c.getContext("2d");
+        g.fillStyle = "#fff"; g.fillRect(0, 0, w, h);
+        g.drawImage(img, 0, 0, w, h);
+        const d = c.toDataURL("image/jpeg", q);
+        out = { data: d, bytes: Math.round(d.length * 0.75), w: w, h: h };
+        if (d.length <= 450000) break;
+      }
+      URL.revokeObjectURL(url);
+      if (!out || out.data.length > 500000) rej(new Error("too_big"));
+      else res(out);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error("bad_image")); };
+    img.src = url;
+  });
+}
+
+$("photo").addEventListener("change", async function(){
+  const f = this.files && this.files[0];
+  this.value = "";
+  if (!f) return;
+  if (!/^image\//.test(f.type)){ toast("写真を えらんでね", true); return; }
+  toast("写真を 小さくしてる…");
+  try {
+    const r = await shrink(f);
+    photoData = r.data; photoBytes = r.bytes;
+    $("pv").src = r.data;
+    $("pvWrap").style.display = "block";
+    toast("写真を 入れたよ（おくる ときに いっしょに おくられる）");
+  } catch (e) {
+    photoData = null; photoBytes = 0;
+    toast("この 写真は つかえませんでした。べつのを ためしてね", true);
+  }
+});
+$("pvClear").addEventListener("click", function(){
+  photoData = null; photoBytes = 0;
+  $("pvWrap").style.display = "none"; $("pv").src = "";
+});
+
+async function sendPhoto(caption){
+  if (!photoData) return;
+  const d = photoData, b = photoBytes;
+  try {
+    const r = await api("/api/photo", { method: "POST", body: JSON.stringify({ data: d, bytes: b, caption: caption }) });
+    if (r.res.ok && r.data && r.data.ok){
+      toast("写真も アップしたよ！");
+      photoData = null; photoBytes = 0;
+      $("pvWrap").style.display = "none"; $("pv").src = "";
+    } else {
+      toast("意見は おくれたけど、写真は おくれなかった", true);
+    }
+  } catch (e) {
+    toast("意見は おくれたけど、写真は おくれなかった", true);
+  }
+}
+
+/* ---- 先生からの しつもん ---- */
   .askcard{border-color:rgba(43,108,163,.34);}
   .askitem{padding:14px 0;border-bottom:1px solid #E3EAF0;}
   .askitem:last-child{border-bottom:none;padding-bottom:2px;}
@@ -254,6 +325,15 @@
   .askta:focus{outline:none;border-color:rgba(43,108,163,.55);box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(43,108,163,.15);}
   .stopmark{display:flex;align-items:center;gap:11px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:17px;color:#A62F19;margin-bottom:6px;}
   .stopmark svg{flex:none;}
+  .field.photo .pick{display:flex;align-items:center;justify-content:center;gap:9px;padding:14px;border-radius:16px;
+                     border:1.5px dashed #C9D6E2;background:rgba(255,255,255,.72);font-family:'Zen Maru Gothic',sans-serif;
+                     font-weight:700;font-size:14.5px;color:var(--ink2);cursor:pointer;transition:.15s;}
+  .field.photo .pick:hover{background:#fff;border-color:rgba(43,108,163,.5);}
+  .pv{position:relative;margin-top:11px;border-radius:16px;overflow:hidden;border:1px solid #D8E2EA;background:#fff;box-shadow:var(--lift-sm);}
+  .pv img{display:block;width:100%;height:auto;max-height:270px;object-fit:cover;}
+  .pvx{position:absolute;right:9px;top:9px;border:none;border-radius:999px;background:rgba(18,30,42,.64);color:#fff;
+       font:inherit;font-size:12px;padding:6px 12px;cursor:pointer;}
+  .phint{margin:9px 0 0;font-size:11.5px;color:var(--soft);text-align:center;}
   .lbl .opt{font-weight:400;font-size:11.5px;color:var(--soft);margin-left:5px;letter-spacing:0;}
   </style>
 </head>
@@ -276,7 +356,7 @@
   <div class="hero">
     <h1>きみの意見を、<em>おくろう。</em></h1>
     <p>おなじ意見が 多いほど、先生の画面で<b>まるが大きく</b>なるよ。おくった 数だけ まるも 大きくなる。</p>
-    <div class="theme" id="themeText">クラスで 大切にしたいこと</div>
+    <div class="theme" id="themeText">歴史</div>
   </div>
 
   <!-- はじめての なまえ とうろく -->
@@ -310,6 +390,26 @@
           <span class="sub"><span id="c2">0</span> / <span id="m2">200</span> 字</span>
         </div>
         <textarea id="reason" rows="4" enterkeyhint="enter" autocomplete="off"></textarea>
+      </div>
+      <div class="field photo">
+        <div class="lbl">
+          <span class="num">3</span>
+          <span class="t">写真<span class="opt">かかなくても いいよ</span></span>
+        </div>
+        <label class="pick" for="photo">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="6" width="18" height="14" rx="3" stroke="#2B6CA3" stroke-width="2"/>
+            <circle cx="9" cy="12" r="2" fill="#2B6CA3"/>
+            <path d="M3.6 18.4 9 14l4 3.4 3.2-2.6L21 18" stroke="#2B6CA3" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          写真を えらぶ
+        </label>
+        <input type="file" id="photo" accept="image/*" style="display:none">
+        <div class="pv" id="pvWrap" style="display:none">
+          <img id="pv" alt="えらんだ 写真">
+          <button class="pvx" id="pvClear" type="button">やめる</button>
+        </div>
+        <p class="phint">写真は かならずでは ありません。先生の画面に ならびます。</p>
       </div>
       <button class="send" id="sendBtn" type="button">送信する</button>
       <p class="hint">エンターでは送信されません。<b>送信ボタン</b>をおしてね。<br>おくると、あたらしい意見として ふえていきます。<br><b>理由は かかなくても おくれます。</b>むずかしいときは 意見だけでも だいじょうぶ。</p>
@@ -369,7 +469,7 @@
    ========================================================= */
 const CONFIG = {
   // 聞きたいこと（クラスのテーマ）
-  theme: "クラスで 大切にしたいこと",
+  theme: "",   // 見出しの ことばは サーバーから とる（「〇〇の 歴史」）
   maxName: 16,
   maxOpinion: 60,
   maxReason: 200
@@ -397,10 +497,20 @@ let currentUser = null;
   });
 })();
 
-$("themeText").textContent = CONFIG.theme;
 $("m1").textContent = CONFIG.maxOpinion;
 $("m2").textContent = CONFIG.maxReason;
-document.title = "まる意見｜" + CONFIG.theme;
+
+/* ---- 見出し「〇〇の 歴史」を サーバーから とる ---- */
+let themeText = "歴史";
+async function loadTheme(){
+  try {
+    const r = await api("/api/theme");
+    const t = (r.data && r.data.theme) || "";
+    if (t) themeText = t + "の 歴史";
+  } catch (e) {}
+  $("themeText").textContent = themeText;
+  document.title = "まる意見｜" + themeText;
+}
 
 /* ---- トースト ---- */
 let toastTimer = null;
@@ -467,6 +577,8 @@ function showForm(){
   $("reason").value = "";
   $("c1").textContent = "0";
   $("c2").textContent = "0";
+  photoData = null; photoBytes = 0;
+  if ($("pvWrap")){ $("pvWrap").style.display = "none"; $("pv").src = ""; }
 }
 
 function showSent(sub){
@@ -505,6 +617,7 @@ $("regBtn").addEventListener("click", async function(){
     });
     if (r.res.ok && r.data && r.data.ok){
       myName = r.data.name;
+      keepSid(r.data.sid);
       setWho(myName);
       toast("ようこそ、" + myName + " さん");
       myState = "form";
@@ -549,6 +662,7 @@ $("sendBtn").addEventListener("click", async function(){
     if (r.res.ok && r.data && r.data.ok){
       showSent(r.data);
       toast("おくったよ！");
+      await sendPhoto(r.data.opinion);
     } else {
       toast((r.data && r.data.error) || "送れませんでした", true);
     }
@@ -671,6 +785,25 @@ function showBan(info, silent){
   if (!silent) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ---- アカウントを おぼえておく（Cookieが 消えても もどれる） ---- */
+const LS_KEY = "maru_sid_keep";
+function keepSid(sid){ try { if (sid) localStorage.setItem(LS_KEY, sid); } catch (e) {} }
+function keptSid(){ try { return localStorage.getItem(LS_KEY) || ""; } catch (e) { return ""; } }
+function forgetSid(){ try { localStorage.removeItem(LS_KEY); } catch (e) {} }
+
+let triedRestore = false;
+async function tryRestore(){
+  if (triedRestore) return;
+  triedRestore = true;
+  const sid = keptSid();
+  if (!sid) return;
+  try {
+    const r = await api("/api/restore", { method: "POST", body: JSON.stringify({ sid: sid }) });
+    if (r.res.ok && r.data && r.data.ok){ myName = ""; return; }   // Cookie を もどせた → すぐ 「/api/me」 を もういちど 見る
+    if (r.res.status === 404) forgetSid();                          // もう いない → おぼえを すてる
+  } catch (e) {}
+}
+
 /* ---- リロードなしで 反映する（5秒ごとに 見にいく） ---- */
 let myState = "";       // "" | "name" | "form" | "ban"
 let askSig = "";
@@ -704,6 +837,19 @@ async function refresh(){
     return;
   }
 
+  // 2.5) まだ とうろくずみで ない → おぼえが あれば もどしてみる
+  if (!triedRestore){
+    await tryRestore();
+    try { const r2 = await api("/api/me"); if (r2.data && r2.data.registered) d = r2.data; } catch (e) {}
+    if (d && d.registered && d.name){
+      myName = d.name; setWho(myName); showLive(true);
+      if (myState !== "form"){ myState = "form"; showForm(); }
+      keepSid(d.sid);
+      await loadAsks();
+      return;
+    }
+  }
+
   // 3) まだ とうろくしていない
   showLive(false);
   if (myState !== "name"){
@@ -728,9 +874,12 @@ document.addEventListener("visibilitychange", function(){
 window.addEventListener("load", async function(){
   const params = new URLSearchParams(location.search);
   if (params.get("reset") === "1"){
+    forgetSid();
+    triedRestore = true;   // わざと わすれたので もどさない
     await api("/api/logout", { method: "POST" });
     history.replaceState(null, "", location.pathname);
   }
+  await loadTheme();
   await refresh();
   if (myState === ""){ myState = "name"; showNameCard(); }   // つながらない ときも まっしろに しない
   startPoll();

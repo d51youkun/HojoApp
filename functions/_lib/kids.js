@@ -47,6 +47,7 @@ export async function deleteAccount(env, sid) {
     ).bind(sid),
     env.DB.prepare("DELETE FROM submissions WHERE sid = ?1").bind(sid),
     env.DB.prepare("DELETE FROM asks WHERE sid = ?1").bind(sid),
+    env.DB.prepare("DELETE FROM photos WHERE sid = ?1").bind(sid),
     env.DB.prepare("DELETE FROM bans WHERE sid = ?1").bind(sid),
     env.DB.prepare("DELETE FROM kids WHERE sid = ?1").bind(sid),
   ]);
