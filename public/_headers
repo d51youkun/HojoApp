@@ -1,0 +1,18 @@
+# まる意見：HTMLは ブラウザに ためこませない（古い画面が のこるのを ふせぐ）
+/
+  Cache-Control: no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-store, must-revalidate
+
+/先生/
+  Cache-Control: no-store, must-revalidate
+
+/先生/index.html
+  Cache-Control: no-store, must-revalidate
+
+/管理者/
+  Cache-Control: no-store, must-revalidate
+
+/管理者/index.html
+  Cache-Control: no-store, must-revalidate

@@ -48,12 +48,24 @@ printf '%s' "６年生" | W pages secret put TEACHER_PASS --project-name $PROJEC
 say "5) デプロイ"
 W pages deploy public --project-name $PROJECT --branch main --commit-dirty=true 2>&1 | tail -8
 
-say "6) たしかめる"
-D="https://$PROJECT.pages.dev"; sleep 6
-echo -n "トップ: "; curl -s -o /dev/null -w "%{http_code}\n" "$D/"
-echo -n "先生画面: "; curl -s -o /dev/null -w "%{http_code}\n" "$D/%E5%85%88%E7%94%9F/"
+say "6) たしかめる（いつもの 本番URL に 出たか）"
+D="https://$PROJECT.pages.dev"; sleep 8
+echo "  見る ところ: $D"
+echo -n "  トップ:   "; curl -s -o /dev/null -w "%{http_code}\n" "$D/"
+echo -n "  管理者:   "; curl -s -o /dev/null -w "%{http_code}\n" "$D/%E7%AE%A1%E7%90%86%E8%80%85/"
+echo -n "  先生:     "; curl -s -o /dev/null -w "%{http_code}\n" "$D/%E5%85%88%E7%94%9F/"
+
+# 中身が 新しくなっているか（ことばを 数える）
+BODY="$(curl -s "$D/")"
+N="$(printf '%s' "$BODY" | grep -c 'themeText' || true)"
+echo "  子ども画面に themeText: $N こ（1以上なら 新しい ばん）"
 T="$(mktemp)"
-curl -s -c "$T" -H 'content-type: application/json' -d '{"pass":"６年生"}' "$D/api/teacher"; echo
-echo "・先生画面の データ: "; curl -s -b "$T" "$D/api/board" | head -c 500; echo
-rm -f "$T"
-echo "（total が データの かずと おなじなら だいじょうぶ）"
+curl -s -c "$T" -H 'content-type: application/json' -d '{"pass":"６年生"}' "$D/api/teacher" >/dev/null
+echo -n "  先生の 合言葉: "; curl -s -o /dev/null -w "%{http_code}\n" -b "$T" "$D/api/photos"
+A="$(mktemp)"
+curl -s -c "$A" -H 'content-type: application/json' -d '{"pass":"D51498Go"}' "$D/api/admin" >/dev/null
+echo -n "  かんりしゃ:     "; curl -s -o /dev/null -w "%{http_code}\n" -b "$A" "$D/api/board"
+rm -f "$T" "$A"
+echo
+echo "  すべて 200 で、themeText が 1以上なら デプロイ成功。"
+echo "  ※ 画面が 古いままなら、URLの うしろに ?v=14 を つけて ひらきなおしてね"
