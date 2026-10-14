@@ -78,3 +78,14 @@ CREATE TABLE IF NOT EXISTS opinion_vectors (
   vector      TEXT NOT NULL,
   updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- ブラウザで おきた エラーを あつめる（どこで こけているか 見るため）
+CREATE TABLE IF NOT EXISTS reports (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  page       TEXT NOT NULL DEFAULT '',
+  step       TEXT NOT NULL DEFAULT '',
+  message    TEXT NOT NULL DEFAULT '',
+  extra      TEXT NOT NULL DEFAULT '',
+  ua         TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

@@ -805,9 +805,29 @@ async function tryRestore(){
   } catch (e) {}
 }
 
+/* ---- エラーを サーバーに おくる（どこで こけているか 見えるように） ---- */
+function report(step, msg, extra){
+  try {
+    fetch("/api/report", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ page: "kid", step: step, message: String(msg || "").slice(0, 300), extra: String(extra || "").slice(0, 300) })
+    });
+  } catch (e) {}
+}
+window.addEventListener("error", function(ev){
+  report("window.onerror", ev.message, (ev.filename || "") + ":" + (ev.lineno || 0));
+});
+window.addEventListener("unhandledrejection", function(ev){
+  const r = ev && ev.reason;
+  report("promise", (r && (r.message || r.name)) || "unknown");
+});
+
 /* ---- エラーの りゆうを 見える形に する ---- */
 function netReason(e){
   const m = (e && (e.message || e.name)) || "network";
+  report("network", m, (e && e.stack) || "");
   return "つながりませんでした（" + m + "）。もういちど おしてね";
 }
 function httpReason(res, data){
