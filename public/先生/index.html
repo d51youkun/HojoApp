@@ -262,6 +262,10 @@
   .act.danger span{color:rgba(255,255,255,.88);}
   .act.danger.arm{background:linear-gradient(180deg,#7E1F0C,#5E1507);}
   .act.cancel{background:transparent;border-color:transparent;text-align:center;color:var(--soft);font-weight:600;margin-bottom:0;}
+  .act.wipe{border-color:rgba(166,47,25,.32);color:#A62F19;background:#fff;}
+  .act.wipe span{color:#B4584A;}
+  .act.wipe.arm{background:linear-gradient(180deg,#7E1F0C,#5E1507);color:#fff;border-color:rgba(255,255,255,.4);}
+  .act.wipe.arm span{color:rgba(255,255,255,.9);}
   .row.tap{cursor:pointer;border-radius:14px;}
   .row.tap:hover{background:rgba(43,108,163,.06);}
   .banrow.tap2{cursor:pointer;border-radius:14px;}
@@ -853,8 +857,15 @@ function latestSubmissionIdOf(sid){
   return best || null;
 }
 
-function openActions(sid, name){
-  if (!sid){ toast("この人は 名指しできません（意見が ありません）", true); return; }
+/** 「アカウントを けす」で 何が 消えるかを 先に 見せる */
+function wipeInfo(sid){
+  const k = (kidsList || []).filter(function(x){ return String(x.sid) === String(sid); })[0];
+  const posts = k ? (k.posts || 0) : 0;
+  const asks = askListOf(sid).length;
+  return "この人の 名前・意見 " + posts + "こ・しつもん " + asks + "こ";
+}
+
+function openActions(sid, name){  if (!sid){ toast("この人は 名指しできません（意見が ありません）", true); return; }
   const old = document.getElementById("actSheet");
   if (old) old.remove();
 
@@ -867,6 +878,7 @@ function openActions(sid, name){
     + '<button class="act" data-act="reason" type="button">理由を きく<span>なぜ そう 思ったのか、もういちど 聞きます</span></button>'
     + '<button class="act" data-act="detail" type="button">詳しく お願いする<span>もっと 詳しく 説明して もらいます</span></button>'
     + '<button class="act danger" data-act="ban" type="button">Ban!!<span>アカウントを 止めます。あとで 復旧できます</span></button>'
+    + '<button class="act wipe" data-act="wipe" type="button">アカウントを けす<span>' + esc(wipeInfo(sid)) + ' を 消します（もどせません）</span></button>'
     + '<button class="act cancel" data-act="cancel" type="button">やめる</button>'
     + '</div>';
   document.body.appendChild(box);
@@ -899,6 +911,37 @@ function openActions(sid, name){
       const act = btn.getAttribute("data-act");
       if (act === "cancel"){ close(); return; }
       if (act === "reason" || act === "detail"){ await sendAsk(btn, act); return; }
+
+      // アカウント削除（もどせない）。Ban とは べつ。
+      if (act === "wipe"){
+        if (btn.getAttribute("data-arm") !== "1"){
+          btn.setAttribute("data-arm", "1");
+          btn.innerHTML = 'ほんとに 消す？<span>' + esc(wipeInfo(sid)) + ' を 消します。もどせません</span>';
+          setTimeout(function(){
+            if (btn.isConnected){
+              btn.removeAttribute("data-arm");
+              btn.innerHTML = 'アカウントを けす<span>' + esc(wipeInfo(sid)) + ' を 消します（もどせません）</span>';
+            }
+          }, 5000);
+          return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = "消してる…";
+        const rr = await api("/api/account", { method: "DELETE", body: JSON.stringify({ sid: sid }) });
+        if (rr.res.ok && rr.data && rr.data.ok){
+          toast(name + " さんの アカウントを 消したよ（意見 " + (rr.data.posts || 0) + "こ・しつもん " + (rr.data.asks || 0) + "こ）");
+          close();
+          await loadAdmin();
+          await loadBoard();
+        } else {
+          toast((rr.data && rr.data.error) || "消せませんでした", true);
+          btn.disabled = false;
+          btn.innerHTML = 'アカウントを けす<span>' + esc(wipeInfo(sid)) + ' を 消します（もどせません）</span>';
+          btn.removeAttribute("data-arm");
+        }
+        return;
+      }
+
       if (act !== "ban") return;
 
       // Ban!! は 2回おして はじめて 止まる（まちがえて 止めないように）

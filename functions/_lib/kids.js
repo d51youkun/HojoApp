@@ -28,6 +28,37 @@ export async function countKids(env) {
 }
 
 /**
+ * アカウントを まるごと 消す（もどせない）。
+ *   kids の行 / その人の 意見 / 意見の ベクトル / しつもん / Banの 行 を ぜんぶ 消す。
+ * 消した ないよう（なまえ・意見の かず・しつもんの かず）を かえす。
+ */
+export async function deleteAccount(env, sid) {
+  if (!sid) return null;
+
+  const kid = await env.DB.prepare("SELECT sid, name FROM kids WHERE sid = ?1").bind(sid).first();
+  if (!kid) return null;
+
+  const posts = await env.DB.prepare("SELECT COUNT(*) AS n FROM submissions WHERE sid = ?1").bind(sid).first();
+  const asks = await env.DB.prepare("SELECT COUNT(*) AS n FROM asks WHERE sid = ?1").bind(sid).first();
+
+  await env.DB.batch([
+    env.DB.prepare(
+      "DELETE FROM opinion_vectors WHERE subject_id IN (SELECT id FROM submissions WHERE sid = ?1)"
+    ).bind(sid),
+    env.DB.prepare("DELETE FROM submissions WHERE sid = ?1").bind(sid),
+    env.DB.prepare("DELETE FROM asks WHERE sid = ?1").bind(sid),
+    env.DB.prepare("DELETE FROM bans WHERE sid = ?1").bind(sid),
+    env.DB.prepare("DELETE FROM kids WHERE sid = ?1").bind(sid),
+  ]);
+
+  return {
+    name: kid.name,
+    posts: (posts && posts.n) || 0,
+    asks: (asks && asks.n) || 0,
+  };
+}
+
+/**
  * とうろくずみの 人ぜんいん（意見を まだ 出していない人も ふくむ）。
  * 意見の かずと、いま Ban中か どうかも つける。
  * → 先生が「意見を 出していない子」も 名指しで しつもん／Ban できる。
