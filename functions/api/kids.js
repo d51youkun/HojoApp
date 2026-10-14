@@ -4,11 +4,11 @@
 // この API は kids 表 から ぜんいんを かえす。だから 先生は
 // 「意見を 出していない子」にも しつもんを 出したり Ban したり できる。
 
-import { json, fail, isTeacher } from "../_lib/auth.js";
+import { json, fail, isAdmin } from "../_lib/auth.js";
 import { listKidsWithStats } from "../_lib/kids.js";
 
 export async function onRequestGet({ request, env }) {
-  if (!(await isTeacher(request, env))) {
+  if (!(await isAdmin(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
   return json({ ok: true, kids: await listKidsWithStats(env) });
