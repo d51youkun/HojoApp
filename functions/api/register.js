@@ -6,6 +6,7 @@
 
 import { json, fail, cleanText, getSid, sidCookie } from "../_lib/auth.js";
 import { findKid, createKid } from "../_lib/kids.js";
+import { findBanByName } from "../_lib/rules.js";
 
 const MAX_NAME = 16;
 
@@ -29,6 +30,17 @@ export async function onRequestPost({ request, env }) {
   if (kid) {
     // もう とうろく ずみ。なまえは かえない。
     return json({ ok: true, name: kid.name, changed: false });
+  }
+
+  // 止められた なまえで 入りなおそうと していないか
+  // （「reset」で 新しい Cookie を とっても、おなじ なまえでは 入れない）
+  const bannedName = await findBanByName(env, name);
+  if (bannedName) {
+    return fail(
+      403,
+      "この なまえは 先生が ていし中です。先生に そうだんしてね",
+      "banned_name"
+    );
   }
 
   const made = await createKid(env, name);

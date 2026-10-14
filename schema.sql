@@ -20,6 +20,34 @@ CREATE TABLE IF NOT EXISTS submissions (
 CREATE INDEX IF NOT EXISTS idx_submissions_created ON submissions(created_at);
 CREATE INDEX IF NOT EXISTS idx_submissions_sid ON submissions(sid);
 
+-- 先生が出した「しつもん」と、子どもの「こたえ」。
+-- kind:"reason" … 理由をきく ／ kind:"detail" … 詳しくお願いする
+CREATE TABLE IF NOT EXISTS asks (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  sid           TEXT NOT NULL,         -- だれに きいたか
+  name          TEXT NOT NULL,         -- その人の なまえ
+  kind          TEXT NOT NULL,         -- "reason" / "detail"
+  text          TEXT NOT NULL,         -- 先生の ことば
+  submission_id INTEGER,               -- どの意見について か（なければ 空）
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  answered      INTEGER NOT NULL DEFAULT 0,
+  answer        TEXT NOT NULL DEFAULT '',
+  answered_at   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_asks_sid ON asks(sid);
+CREATE INDEX IF NOT EXISTS idx_asks_open ON asks(sid, answered);
+
+-- 止めた（Banした）人の リスト。復旧すると この行を けす。
+CREATE TABLE IF NOT EXISTS bans (
+  sid        TEXT PRIMARY KEY,         -- 止めた ブラウザ（Cookie）
+  name       TEXT NOT NULL,            -- 止めた ときの なまえ
+  reason     TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_bans_name ON bans(name);
+
 -- 意見の「意味の数値（ベクトル）」をためておく場所。
 -- 同じ意見を何度も Workers AI に送らないようにするためのメモ。
 CREATE TABLE IF NOT EXISTS opinion_vectors (

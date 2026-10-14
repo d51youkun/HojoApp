@@ -240,6 +240,17 @@
     .deco{display:none;}
   }
 
+  /* ---- 先生からの しつもん ---- */
+  .askcard{border-color:rgba(43,108,163,.34);}
+  .askitem{padding:14px 0;border-bottom:1px solid #E3EAF0;}
+  .askitem:last-child{border-bottom:none;padding-bottom:2px;}
+  .askq{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15.5px;line-height:1.8;color:var(--ink);}
+  .askop{font-size:11.5px;color:var(--soft);margin-top:5px;}
+  .askta{width:100%;margin-top:11px;padding:12px 13px;border-radius:16px;border:1px solid #D8E2EA;background:rgba(255,255,255,.92);
+         font-family:'Zen Maru Gothic',sans-serif;font-size:16px;line-height:1.8;color:var(--ink);resize:vertical;box-sizing:border-box;}
+  .askta:focus{outline:none;border-color:rgba(43,108,163,.55);box-shadow:inset 0 1px 3px rgba(12,28,44,.05), 0 0 0 4px rgba(43,108,163,.15);}
+  .stopmark{display:flex;align-items:center;gap:11px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:17px;color:#A62F19;margin-bottom:6px;}
+  .stopmark svg{flex:none;}
   </style>
 </head>
 <body>
@@ -319,6 +330,31 @@
     </div>
   </section>
 </div>
+
+  <!-- 先生からの しつもん（あるときだけ 出る） -->
+  <section class="card askcard" id="askCard" style="display:none">
+    <div class="senthead" style="color:#2B6CA3">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="11" stroke="#2B6CA3" stroke-width="2.5"/>
+        <path d="M12 6.8v6.4" stroke="#2B6CA3" stroke-width="2.8" stroke-linecap="round"/>
+        <circle cx="12" cy="16.8" r="1.45" fill="#2B6CA3"/>
+      </svg>
+      先生からの しつもん
+    </div>
+    <div id="askBody"></div>
+  </section>
+
+  <!-- アカウントが ていし されているとき -->
+  <section class="card" id="banCard" style="display:none">
+    <div class="stopmark">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="#C8492E" stroke-width="2.4"/>
+        <path d="M6.6 6.6l10.8 10.8" stroke="#C8492E" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+      アカウントが ていしに なりました
+    </div>
+    <p class="why" id="banMsg">先生が アカウントを ていし しました。先生に そうだんしてね。</p>
+  </section>
 
 <div class="toast" id="toast"></div>
 
@@ -465,6 +501,10 @@ $("regBtn").addEventListener("click", async function(){
       setWho(myName);
       toast("ようこそ、" + myName + " さん");
       showForm();
+      loadAsks();
+    } else if (r.data && r.data.code === "banned_name"){
+      // おなじ なまえで 入りなおそうとした人
+      showBan({ name: name, message: r.data.error || "" });
     } else {
       toast((r.data && r.data.error) || "とうろくできませんでした", true);
     }
@@ -512,6 +552,100 @@ $("sendBtn").addEventListener("click", async function(){
   }
 });
 
+/* ---- 先生からの しつもん ---- */
+let myAsks = [];
+
+function askItem(a){
+  const item = document.createElement("div");
+  item.className = "askitem";
+
+  const q = document.createElement("div");
+  q.className = "askq";
+  q.textContent = a.text || "教えてね";
+  item.appendChild(q);
+
+  if (a.opinion){
+    const op = document.createElement("div");
+    op.className = "askop";
+    op.textContent = "きかれた 意見：" + a.opinion;
+    item.appendChild(op);
+  }
+
+  const ta = document.createElement("textarea");
+  ta.className = "askta";
+  ta.rows = 3;
+  ta.maxLength = CONFIG.maxReason;
+  ta.placeholder = "こたえを 書いてね";
+  item.appendChild(ta);
+
+  const btn = document.createElement("button");
+  btn.className = "send";
+  btn.type = "button";
+  btn.textContent = "こたえる";
+  btn.addEventListener("click", async function(){
+    const v = ta.value.trim();
+    if (!v){ toast("こたえを 書いてね", true); ta.focus(); return; }
+    btn.disabled = true;
+    btn.textContent = "おくってる…";
+    try {
+      const r = await api("/api/answer", {
+        method: "POST",
+        body: JSON.stringify({ id: a.id, answer: v })
+      });
+      if (r.res.ok && r.data && r.data.ok){
+        toast("こたえたよ！ ありがとう");
+        await loadAsks();
+      } else if (r.data && r.data.code === "banned"){
+        showBan({ name: myName, message: r.data.error || "" });
+      } else {
+        toast((r.data && r.data.error) || "おくれませんでした", true);
+        btn.disabled = false;
+        btn.textContent = "こたえる";
+      }
+    } catch (e) {
+      toast("つながりませんでした。あとで ためしてね", true);
+      btn.disabled = false;
+      btn.textContent = "こたえる";
+    }
+  });
+  item.appendChild(btn);
+  return item;
+}
+
+function showAskCard(){
+  const card = $("askCard");
+  if (!card) return;
+  if (!myAsks.length){ card.style.display = "none"; $("askBody").innerHTML = ""; return; }
+  const body = $("askBody");
+  body.innerHTML = "";
+  myAsks.forEach(function(a){ body.appendChild(askItem(a)); });
+  card.style.display = "block";
+}
+
+async function loadAsks(){
+  try {
+    const r = await api("/api/myask");
+    myAsks = (r.data && r.data.asks) || [];
+  } catch (e) {
+    myAsks = [];
+  }
+  showAskCard();
+}
+
+/* ---- ていし（Ban）されたとき ---- */
+function showBan(info){
+  $("nameCard").style.display = "none";
+  $("formCard").style.display = "none";
+  $("askCard").style.display = "none";
+  if (info && info.name) setWho(info.name);
+  const msg = (info && info.message) ? info.message : "";
+  $("banMsg").textContent = msg
+    ? "先生から：" + msg
+    : "先生が アカウントを ていし しました。先生に そうだんしてね。";
+  $("banCard").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 /* ---- さいしょの よみこみ ---- */
 async function boot(){
   const params = new URLSearchParams(location.search);
@@ -519,15 +653,24 @@ async function boot(){
     await api("/api/logout", { method: "POST" });
     history.replaceState(null, "", location.pathname);
   }
-  try {
-    const me = await api("/api/me");
-    if (me.data && me.data.registered && me.data.name){
-      myName = me.data.name;
-      setWho(myName);
-      showForm();
-      return;
-    }
-  } catch (e) {}
+
+  let me = null;
+  try { me = await api("/api/me"); } catch (e) {}
+
+  // 止められている人は、まずそれを しらせる（入力させない）
+  if (me && me.data && me.data.banned){
+    showBan(me.data);
+    return;
+  }
+
+  if (me && me.data && me.data.registered && me.data.name){
+    myName = me.data.name;
+    setWho(myName);
+    showForm();
+    await loadAsks();
+    return;
+  }
+
   setWho("");
   showNameCard();
 }

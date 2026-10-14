@@ -247,6 +247,40 @@
     body{background:#F2F6FA;}
   }
 
+  /* ---- 名前をおしたら 出る「どうする？」 ---- */
+  .sheetwrap{position:fixed;inset:0;background:rgba(14,28,42,.42);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+             display:flex;align-items:flex-end;justify-content:center;padding:18px;z-index:60;}
+  .sheet{width:100%;max-width:430px;background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.75);border-radius:26px;
+         padding:18px 16px 12px;box-shadow:0 20px 50px rgba(12,28,44,.3);animation:pop .16s ease-out;}
+  @keyframes pop{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+  .sheet .shead{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:16px;margin:0 0 13px;text-align:center;color:var(--ink);}
+  .act{display:block;width:100%;text-align:left;margin:0 0 9px;padding:13px 15px;border-radius:16px;border:1px solid var(--hair);
+       background:#fff;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:15px;color:var(--ink);cursor:pointer;transition:.14s;}
+  .act span{display:block;font-family:system-ui,sans-serif;font-weight:500;font-size:11.5px;color:var(--soft);margin-top:3px;line-height:1.6;}
+  .act:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(12,28,44,.11);}
+  .act.danger{background:linear-gradient(180deg,#C8492E,#A62F19);color:#fff;border-color:rgba(255,255,255,.4);}
+  .act.danger span{color:rgba(255,255,255,.88);}
+  .act.danger.arm{background:linear-gradient(180deg,#7E1F0C,#5E1507);}
+  .act.cancel{background:transparent;border-color:transparent;text-align:center;color:var(--soft);font-weight:600;margin-bottom:0;}
+  .row.tap{cursor:pointer;border-radius:14px;}
+  .row.tap:hover{background:rgba(43,108,163,.06);}
+  .chip{display:inline-block;flex:none;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;
+        background:#EAF2FA;color:#2B6CA3;border:1px solid rgba(43,108,163,.18);}
+  .chip.done{background:#E8F4EC;color:#2C6B4A;border-color:rgba(63,143,99,.22);}
+  .qa{margin-top:7px;padding:9px 11px;border-left:3px solid rgba(43,108,163,.35);background:rgba(43,108,163,.05);border-radius:0 10px 10px 0;}
+  .qa .qq{font-size:11.5px;color:var(--soft);line-height:1.7;}
+  .qa .aa{font-size:13px;line-height:1.75;color:var(--ink2);margin-top:4px;white-space:pre-wrap;word-break:break-word;}
+  .banbox{margin-top:16px;padding:15px 17px;border-radius:22px;background:rgba(255,255,255,.75);border:1px solid var(--hair);
+          -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
+  .banbox h3{margin:0 0 8px;font-family:'Zen Maru Gothic',sans-serif;font-size:14px;color:#A62F19;}
+  .banrow{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--hair);}
+  .banrow:last-child{border-bottom:none;}
+  .banrow .bn{flex:1;min-width:0;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink);}
+  .banrow .bn .why2{font-family:system-ui,sans-serif;font-weight:500;font-size:11.5px;color:var(--soft);margin-top:2px;}
+  .back{border:1px solid rgba(63,143,99,.35);background:#fff;color:#2C6B4A;font-weight:700;font-family:'Zen Maru Gothic',sans-serif;
+        font-size:12.5px;padding:7px 14px;border-radius:12px;cursor:pointer;transition:.14s;flex:none;}
+  .back:hover{background:#EAF6EF;}
+  .back:disabled{opacity:.6;cursor:default;}
   </style>
 </head>
 <body>
@@ -280,7 +314,7 @@
 
     <div class="board">
       <div class="boardhead">
-        <div class="t">同じ意見ほど、まるが大きい <span>まるをおすと、名前と理由が見られるよ。まちがえた意見は けせます</span></div>
+        <div class="t">同じ意見ほど、まるが大きい <span>まるをおすと 名前と理由が見られるよ。<b>名前をおすと「どうする？」</b>が ひらきます</span></div>
         <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
       </div>
       <div class="boardbody">
@@ -290,6 +324,11 @@
         </aside>
       </div>
     </div>
+
+    <section class="banbox" id="banBox" style="display:none">
+      <h3>止めている人（Banリスト）</h3>
+      <div id="banList"></div>
+    </section>
   </section>
 </div>
 
@@ -556,14 +595,16 @@ function drawPanel(){
   html += '<div class="list">';
   if (activeTab === "people"){
     c.members.forEach(function(m){
-      html += '<div class="row">'
+      html += '<div class="row tap" data-sid="' + esc(String(m.sid || "")) + '" data-name="' + esc(m.name) + '" title="おすと「どうする？」が ひらく">'
         + '<div class="ini">' + esc(initial(m.name)) + '</div>'
-        + '<div class="body"><div class="nm"><span>' + esc(m.name) + '</span></div></div>'
+        + '<div class="body"><div class="nm"><span>' + esc(m.name) + '</span>' + askChip(m.sid) + '</div>'
+        + askDetail(m.sid)
+        + '</div>'
         + '</div>';
     });
   } else {
     c.reasons.forEach(function(r){
-      html += '<div class="row">'
+      html += '<div class="row tap" data-sid="' + esc(String(r.sid || "")) + '" data-name="' + esc(r.name) + '" title="おすと「どうする？」が ひらく">'
         + '<div class="ini">' + esc(initial(r.name)) + '</div>'
         + '<div class="body">'
         + '<div class="nm"><span>' + esc(r.name) + '</span>'
@@ -580,6 +621,13 @@ function drawPanel(){
     btn.addEventListener("click", function(){
       activeTab = btn.getAttribute("data-tab");
       drawPanel();
+    });
+  });
+
+  // 名前（の行）をおしたら「どうする？」を ひらく
+  Array.prototype.forEach.call(panel.querySelectorAll(".row.tap"), function(row){
+    row.addEventListener("click", function(){
+      openActions(row.getAttribute("data-sid"), row.getAttribute("data-name"));
     });
   });
 
@@ -661,6 +709,7 @@ async function loadBoard(){
   $("panel").scrollTop = scrollTop;
   $("main").style.display = "block";
   $("gateCard").style.display = "none";
+  loadAdmin();
 }
 
 function startAuto(){
@@ -729,6 +778,186 @@ async function boot(){
 }
 
 window.addEventListener("load", boot);
+
+/* =========================================================
+   v6：先生の「どうする？」（理由をきく／詳しくお願いする／Ban!!）
+   ========================================================= */
+var askMap = {};    // sid -> [しつもん…]
+var banList = [];   // 止めている人
+
+async function loadAdmin(){
+  try {
+    const rs = await Promise.all([api("/api/ask"), api("/api/ban")]);
+    askMap = {};
+    ((rs[0].data && rs[0].data.asks) || []).forEach(function(a){
+      if (!askMap[a.sid]) askMap[a.sid] = [];
+      askMap[a.sid].push(a);
+    });
+    banList = (rs[1].data && rs[1].data.bans) || [];
+    const st = $("panel").scrollTop;
+    drawPanel();
+    $("panel").scrollTop = st;
+    drawBans();
+  } catch (e) {}
+}
+
+function askListOf(sid){
+  return askMap[String(sid || "")] || [];
+}
+
+function askChip(sid){
+  const list = askListOf(sid);
+  if (!list.length) return "";
+  const open = list.filter(function(a){ return !a.answered; }).length;
+  const done = list.length - open;
+  let out = "";
+  if (open) out += '<span class="chip">しつもん中 ' + open + '</span>';
+  if (done) out += '<span class="chip done">こたえた ' + done + '</span>';
+  return out;
+}
+
+function askDetail(sid){
+  const list = askListOf(sid);
+  if (!list.length) return "";
+  let out = "";
+  list.slice(0, 4).forEach(function(a){
+    out += '<div class="qa"><div class="qq">' + esc(a.text) + '</div>'
+      + (a.answered
+          ? '<div class="aa">' + esc(a.answer) + '</div>'
+          : '<div class="aa" style="color:var(--soft)">まだ こたえを まっています…</div>')
+      + '</div>';
+  });
+  return out;
+}
+
+/** その人の いちばん 新しい 意見の 番号（しつもんを 意見に くっつける ため） */
+function latestSubmissionIdOf(sid){
+  let best = 0;
+  (clusters || []).forEach(function(c){
+    (c.reasons || []).forEach(function(r){
+      if (String(r.sid) === String(sid) && Number(r.id) > best) best = Number(r.id);
+    });
+  });
+  return best || null;
+}
+
+function openActions(sid, name){
+  if (!sid){ toast("この人は 名指しできません（意見が ありません）", true); return; }
+  const old = document.getElementById("actSheet");
+  if (old) old.remove();
+
+  const box = document.createElement("div");
+  box.className = "sheetwrap";
+  box.id = "actSheet";
+  box.innerHTML =
+    '<div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(name) + ' さんを どうする？">'
+    + '<div class="shead">' + esc(name) + ' さんを どうする？</div>'
+    + '<button class="act" data-act="reason" type="button">理由を きく<span>なぜ そう 思ったのか、もういちど 聞きます</span></button>'
+    + '<button class="act" data-act="detail" type="button">詳しく お願いする<span>もっと 詳しく 説明して もらいます</span></button>'
+    + '<button class="act danger" data-act="ban" type="button">Ban!!<span>アカウントを 止めます。あとで 復旧できます</span></button>'
+    + '<button class="act cancel" data-act="cancel" type="button">やめる</button>'
+    + '</div>';
+  document.body.appendChild(box);
+  box.addEventListener("click", function(ev){ if (ev.target === box) box.remove(); });
+
+  const close = function(){ box.remove(); };
+
+  const sendAsk = async function(btn, kind){
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const before = btn.innerHTML;
+    btn.textContent = "おくってる…";
+    const r = await api("/api/ask", {
+      method: "POST",
+      body: JSON.stringify({ sid: sid, kind: kind, submission_id: latestSubmissionIdOf(sid) })
+    });
+    if (r.res.ok && r.data && r.data.ok){
+      toast(name + " さんに おくったよ");
+      close();
+      await loadAdmin();
+    } else {
+      toast((r.data && r.data.error) || "おくれませんでした", true);
+      btn.disabled = false;
+      btn.innerHTML = before;
+    }
+  };
+
+  Array.prototype.forEach.call(box.querySelectorAll(".act"), function(btn){
+    btn.addEventListener("click", async function(){
+      const act = btn.getAttribute("data-act");
+      if (act === "cancel"){ close(); return; }
+      if (act === "reason" || act === "detail"){ await sendAsk(btn, act); return; }
+      if (act !== "ban") return;
+
+      // Ban!! は 2回おして はじめて 止まる（まちがえて 止めないように）
+      if (btn.getAttribute("data-arm") !== "1"){
+        btn.setAttribute("data-arm", "1");
+        btn.innerHTML = "ほんとに 止める？<span>もういちど おすと 止まります</span>";
+        setTimeout(function(){
+          if (btn.isConnected){
+            btn.removeAttribute("data-arm");
+            btn.innerHTML = "Ban!!<span>アカウントを 止めます。あとで 復旧できます</span>";
+          }
+        }, 4000);
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = "止めてる…";
+      const r = await api("/api/ban", { method: "POST", body: JSON.stringify({ sid: sid, name: name }) });
+      if (r.res.ok && r.data && r.data.ok){
+        toast(name + " さんを 止めたよ（Banリストから もどせます）");
+        close();
+        await loadAdmin();
+        await loadBoard();
+      } else {
+        toast((r.data && r.data.error) || "止められませんでした", true);
+        btn.disabled = false;
+        btn.innerHTML = "Ban!!<span>アカウントを 止めます。あとで 復旧できます</span>";
+        btn.removeAttribute("data-arm");
+      }
+    });
+  });
+}
+
+function drawBans(){
+  const box = $("banBox");
+  const list = $("banList");
+  if (!box || !list) return;
+  if (!banList.length){ box.style.display = "none"; list.innerHTML = ""; return; }
+
+  let html = "";
+  banList.forEach(function(b){
+    html += '<div class="banrow">'
+      + '<div class="ini">' + esc(initial(b.name)) + '</div>'
+      + '<div class="bn">' + esc(b.name)
+      + (b.reason ? '<div class="why2">' + esc(b.reason) + '</div>' : '')
+      + '</div>'
+      + '<button class="back" data-sid="' + esc(String(b.sid)) + '" type="button">復旧</button>'
+      + '</div>';
+  });
+  list.innerHTML = html;
+  box.style.display = "block";
+
+  Array.prototype.forEach.call(list.querySelectorAll(".back"), function(btn){
+    btn.addEventListener("click", async function(){
+      btn.disabled = true;
+      btn.textContent = "もどしてる…";
+      const r = await api("/api/ban", {
+        method: "DELETE",
+        body: JSON.stringify({ sid: btn.getAttribute("data-sid") })
+      });
+      if (r.res.ok && r.data && r.data.ok){
+        toast((r.data.name || "") + " さんを もどしたよ");
+        await loadAdmin();
+        await loadBoard();
+      } else {
+        toast((r.data && r.data.error) || "もどせませんでした", true);
+        btn.disabled = false;
+        btn.textContent = "復旧";
+      }
+    });
+  });
+}
 
 </script>
 </body>

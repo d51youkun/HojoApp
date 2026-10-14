@@ -6,6 +6,7 @@
 
 import { json, fail, cleanText, getSid, isTeacher } from "../_lib/auth.js";
 import { findKid } from "../_lib/kids.js";
+import { isBanned } from "../_lib/rules.js";
 
 const MAX_OPINION = 60;
 const MAX_REASON = 200;
@@ -35,6 +36,9 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   const kid = await findKid(env, await getSid(request, env));
   if (!kid) return fail(401, "まず 「なまえ」を とうろくしてね", "not_registered");
+  if (await isBanned(env, kid.sid)) {
+    return fail(403, "この アカウントは ていし中です。先生に そうだんしてね", "banned");
+  }
 
   let body;
   try {

@@ -66,9 +66,11 @@ export async function onRequestGet({ request, env }) {
         label: g.label,
         count: names.size,                 // 人のかず（同じ人は 1人）
         posts: g.members.length,           // 意見の かず
-        members: Array.from(names.values()).map((name) => ({ name: name })),
+        // sid も わたす（先生が その人を 名指しで 「しつもん」「Ban」できるように）
+        members: Array.from(names.entries()).map((e) => ({ sid: e[0], name: e[1] })),
         reasons: g.members.map((m) => ({
           id: m.id,
+          sid: m.sid,
           name: m.name,
           reason: m.reason,
           opinion: m.opinion,
