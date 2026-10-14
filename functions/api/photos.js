@@ -21,10 +21,16 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const kid = await findKid(env, await getSid(request, env));
-  if (!kid) return fail(401, "まず 「なまえ」を とうろくしてね", "not_registered");
-  if (await isBanned(env, kid.sid)) {
-    return fail(403, "この アカウントは ていし中です。先生に そうだんしてね", "banned");
+  // 先生（か 管理者）も アップできる。子どもは 自分の なまえで。
+  const staff = await isStaff(request, env);
+  let kid = null, ownerName = "先生", ownerSid = "teacher";
+  if (!staff) {
+    kid = await findKid(env, await getSid(request, env));
+    if (!kid) return fail(401, "まず 「なまえ」を とうろくしてね", "not_registered");
+    if (await isBanned(env, kid.sid)) {
+      return fail(403, "この アカウントは ていし中です。先生に そうだんしてね", "banned");
+    }
+    ownerName = kid.name; ownerSid = kid.sid;
   }
 
   let body;
@@ -50,13 +56,13 @@ export async function onRequestPost({ request, env }) {
     r = await env.DB.prepare(
       "INSERT INTO photos (sid, name, caption, data, bytes, created_at) VALUES (?1, ?2, ?3, ?4, ?5, datetime('now'))"
     )
-      .bind(kid.sid, kid.name, caption, data, bytes)
+      .bind(ownerSid, ownerName, caption, data, bytes)
       .run();
   } catch (err) {
     return fail(500, "保存できませんでした（写真が 大きすぎる かも）", "save_failed");
   }
 
-  return json({ ok: true, name: kid.name, id: r.meta && r.meta.last_row_id });
+  return json({ ok: true, name: ownerName, id: r.meta && r.meta.last_row_id });
 }
 
 export async function onRequestDelete({ request, env }) {

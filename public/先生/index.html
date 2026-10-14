@@ -72,6 +72,13 @@
   .pdel.arm{background:linear-gradient(180deg,#C8492E,#A62F19)}
   .empty{padding:56px 20px;text-align:center;color:var(--soft);font-size:13.5px;line-height:2;
          background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:var(--r-lg);box-shadow:var(--inset),var(--lift-sm)}
+  .upbox{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:14px 16px;border-radius:20px;
+         background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);box-shadow:var(--inset),var(--lift-sm);
+         -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+  .upbox .upk{font-weight:700;font-size:13.5px}
+  .pick2{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:14px;cursor:pointer;
+         background:linear-gradient(180deg,#3E86C4,#245E93);color:#fff;font-weight:900;font-size:13.5px;box-shadow:var(--inset),0 8px 18px rgba(43,108,163,.3)}
+  .upbox .upst{font-size:12px;color:var(--soft)}
   .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,18px);opacity:0;pointer-events:none;z-index:90;
          background:rgba(24,38,52,.9);color:#fff;font-size:13.5px;padding:12px 20px;border-radius:999px;box-shadow:0 12px 30px rgba(12,28,44,.3);
          transition:opacity .22s,transform .22s}
@@ -104,10 +111,16 @@
   <section id="main" style="display:none">
     <div class="head">
       <div>
-        <h1>アップされた 写真</h1>
+        <h1 id="themeHead">アップされた 写真</h1>
         <div class="sub">子どもが えらんで おくった 写真が ならびます。おすと 大きく なります</div>
       </div>
       <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
+    </div>
+    <div class="upbox">
+      <div class="upk">写真を アップする</div>
+      <label class="pick2" for="pfile">写真を えらぶ</label>
+      <input type="file" id="pfile" accept="image/*" style="display:none">
+      <div class="upst" id="upSt"></div>
     </div>
     <div class="stats">
       <div class="stat"><div class="k">写真の かず</div><div class="v"><span id="sCount">0</span></div></div>
@@ -252,8 +265,60 @@ async function openGate(){
 $("goBtn").addEventListener("click", openGate);
 $("pass").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); openGate(); } });
 
+/* ---- 見出しの ことば（〇〇の 歴史）を 出す ---- */
+async function loadThemeHead(){
+  try {
+    const r = await api("/api/theme");
+    const t = (r.data && r.data.theme) || "";
+    if (t && $("themeHead")) $("themeHead").textContent = t + "の 歴史";
+    document.title = "まる意見｜" + (t ? t + "の 歴史" : "先生用");
+  } catch (e) {}
+}
+
+/* ---- 先生が 写真を アップする ---- */
+function shrink(file){
+  return new Promise(function(res, rej){
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function(){
+      const tries = [[1200,.72],[1000,.66],[860,.62],[700,.56],[560,.5],[440,.45]];
+      let out = null;
+      for (let i = 0; i < tries.length; i++){
+        const max = tries[i][0], q = tries[i][1];
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0,0,w,h); g.drawImage(img,0,0,w,h);
+        const d = c.toDataURL("image/jpeg", q);
+        out = { data: d, bytes: Math.round(d.length * 0.75) };
+        if (d.length <= 165000) break;
+      }
+      URL.revokeObjectURL(url);
+      if (!out || out.data.length > 195000) rej(new Error("too_big")); else res(out);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error("bad_image")); };
+    img.src = url;
+  });
+}
+document.getElementById("pfile").addEventListener("change", async function(){
+  const f = this.files && this.files[0];
+  this.value = "";
+  if (!f) return;
+  const st = $("upSt");
+  st.textContent = "小さくしてる…";
+  try {
+    const r = await shrink(f);
+    st.textContent = "アップ中…";
+    const rr = await api("/api/photos", { method: "POST", body: JSON.stringify({ data: r.data, bytes: r.bytes }) });
+    if (rr.res.ok && rr.data && rr.data.ok){ toast("アップしたよ！"); st.textContent = ""; await loadPhotos(); }
+    else { toast((rr.data && rr.data.error) || "アップできませんでした", true); st.textContent = ""; }
+  } catch (e) {
+    toast("この 写真は つかえませんでした（大きすぎ かも）", true); st.textContent = "";
+  }
+});
+
 async function boot(){
   setWho("");
+  await loadThemeHead();
   try {
     await loadPhotos();
     if ($("main").style.display !== "none"){ opened = true; setWho("先生"); startAuto(); }
