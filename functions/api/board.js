@@ -8,13 +8,14 @@
 // 丸の大きさ＝「同じ意見の 人の かず」。同じ人が にている意見を 2つ 出しても 人は 1人。
 // 見られるのは先生だけ（合言葉の Cookie を持っている人）。
 
-import { json, fail, isAdmin } from "../_lib/auth.js";
+import { json, fail, isAdmin, isTeacher } from "../_lib/auth.js";
 import { clusterize, medoidLabel } from "../_lib/cluster.js";
 import { ensureVectors } from "../_lib/vectorstore.js";
 import { clusterByVectors, medoidByVectors, DEFAULT_THRESHOLD } from "../_lib/ai.js";
 
 export async function onRequestGet({ request, env }) {
-  if (!(await isAdmin(request, env))) {
+  const admin = await isAdmin(request, env);
+  if (!admin && !(await isTeacher(request, env))) {
     return fail(401, "合言葉を 入れてね", "need_pass");
   }
 
@@ -78,6 +79,14 @@ export async function onRequestGet({ request, env }) {
       };
     })
     .sort((a, b) => b.posts - a.posts || b.count - a.count || String(a.label).localeCompare(String(b.label), "ja"));
+
+  // 先生には sid（アカウントの かぎ）を わたさない。見るだけなので ひつようない。
+  if (!admin) {
+    clusters.forEach((c) => {
+      (c.members || []).forEach((m) => { delete m.sid; });
+      (c.reasons || []).forEach((r) => { delete r.sid; });
+    });
+  }
 
   const people = new Set(items.map((it) => it.sid)).size;
 
