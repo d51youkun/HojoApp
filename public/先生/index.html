@@ -353,7 +353,7 @@
   .board.wide .boardbody{flex:1;min-height:0;}
   .board.wide .canvas{display:flex;align-items:center;justify-content:center;padding:10px 16px;min-height:0;}
   /* まるを できるだけ 大きく：たて・よこ どちらにも 収まる 大きさに する */
-  .board.wide svg.scene{width:auto;height:auto;max-width:100%;max-height:100%;}
+  .board.wide svg.scene{width:100%;height:100%;}
   .board.wide .canvas-empty{align-self:center;}
   .board.wide .panel{overflow-y:auto;}
   .board.wide .list{max-height:none;}
@@ -436,7 +436,7 @@ const CONFIG = {
 /* ========================================================= */
 
 const $ = (id) => document.getElementById(id);
-const VBW = 1000, VBH = 660;
+let VBW = 1000, VBH = 660;   // 全画面の ときは 画面の かたちに 合わせて つくる
 
 // ガラスみたいに すける いろ（うしろの いろが すこし 見える）
 const PALETTE = [
@@ -516,15 +516,29 @@ function gridPack(radii, W, H){
   });
 }
 
+function isWideMode(){ return !!document.querySelector(".board.wide"); }
+
+/** 全画面の ときは、えがく はんい を 画面の かたち（たて・よこ）に 合わせる。
+    こうすると まるが 画面いっぱいに 大きく 出る（よこの 空きが 出ない）。 */
+function fitViewBox(){
+  const host = $("canvas");
+  if (!isWideMode() || !host){ VBW = 1000; VBH = 660; return; }
+  const w = host.clientWidth || 1000, h = host.clientHeight || 660;
+  VBW = 1000;
+  VBH = Math.max(500, Math.min(1800, Math.round(1000 * h / w)));
+}
+
 function layout(n, counts){
   const W = VBW, H = VBH;
+  const wide = isWideMode();
   const sum = counts.reduce(function(a,b){ return a + b; }, 0);
   // 円が おおきすぎないように：つかう めんせきを 20%に おさえ、
   // 半径は 250 で うちどめる（人が ふえても はみださない）。
-  const target = 0.14 * W * H;   // 画面の つかいかた（小さいほど 丸が 小さい。0.20→0.14）
+  const target = (wide ? 0.30 : 0.14) * W * H;   // 画面の つかいかた（小さいほど 丸が 小さい）
   const k = Math.sqrt(target / (Math.PI * sum));
+  const cap = wide ? 430 : 210;                   // 丸の 大きさの 上限
 
-  let radii = counts.map(function(v){ return Math.min(210, Math.max(36, k * Math.sqrt(v))); });
+  let radii = counts.map(function(v){ return Math.min(cap, Math.max(36, k * Math.sqrt(v))); });
   let pos = null;
 
   for (let attempt = 0; attempt < 14; attempt++){
@@ -543,7 +557,7 @@ function layout(n, counts){
   const sx = (W - 20) / Math.max(1, maxX - minX);
   const sy = (H - 20) / Math.max(1, maxY - minY);
   const s = Math.min(1.0, sx, sy);    // 丸の 大きさ（縮めるだけ）
-  const sp = Math.min(1.45, sx, sy);  // ならべ方（位置）は 広げて 画面を つかう
+  const sp = Math.min(wide ? 1.8 : 1.45, sx, sy);  // ならべ方（位置）は 広げて 画面を つかう
   if (s !== 1 || sp !== 1){
     radii = radii.map(function(r){ return r * s; });
     pos = pos.map(function(p, i){
@@ -580,6 +594,7 @@ function wrap(text, fontSize, maxWidth, maxLines){
 /* ---------- えがく ---------- */
 function render(){
   const host = $("canvas");
+  fitViewBox();
   if (!clusters.length){
     host.innerHTML = '<div class="canvas-empty">まだ 意見が あつまっていないよ。<br>子どもたちが おくると、ここに まるが 出るよ。</div>';
     return;
@@ -610,13 +625,13 @@ function render(){
     const col = PALETTE[i % PALETTE.length];
     const isSel = c.id === selectedId;
 
-    const labelSize = Math.max(14, Math.min(30, r * 0.26));
+    const labelSize = Math.max(14, Math.min(isWideMode() ? 62 : 30, r * 0.26));
     const maxW = r * 1.62;
     const maxLines = r > 44 ? 3 : (r > 28 ? 2 : 1);   // 文字が 切れない ように 行を ゆるく
     const lines = wrap(c.label, labelSize, maxW, maxLines);
     const lineH = labelSize * 1.22;
     const cntText = (c.posts || 0) + "こ";
-    const cntSize = Math.max(12.5, Math.min(21, r * 0.18));
+    const cntSize = Math.max(12.5, Math.min(isWideMode() ? 36 : 21, r * 0.18));
 
     const blockH = lines.length * lineH + cntSize * 1.5;
     let y0 = p.y - blockH / 2 + lineH * 0.62;
@@ -1203,6 +1218,8 @@ document.addEventListener("keydown", function(e){
   const i = fsInfo();
   if (e.key === "Escape" && i.wide && !i.real) setWide(false);
 });
+// 画面の かたちが かわったら、まるを えがきなおす（全画面の とき）
+window.addEventListener("resize", function(){ if (isWideMode()){ render(); drawPanel(); } });
 
 function bindFull(){
   const btn = $("fsBtn");
