@@ -829,6 +829,12 @@ $("pass").addEventListener("keydown", function(e){
 
 async function boot(){
   setWho("");
+  // 合言葉なしの ときは、データを まつ あいだも 画面の わくを 出しておく
+  // （まっしろな ままに ならないように）
+  if (OPEN_NO_PASS){
+    $("main").style.display = "block";
+    $("gateCard").style.display = "none";
+  }
   try {
     await loadTitle();
     await loadBoard();
