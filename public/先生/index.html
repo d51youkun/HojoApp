@@ -307,6 +307,26 @@
   .act.danger[data-arm="1"]{background:linear-gradient(180deg,#C8492E,#A62F19);color:#fff;border-color:rgba(255,255,255,.4);}
   .act.danger[data-arm="1"] span{color:rgba(255,255,255,.88);}
   .act.cancel{color:var(--soft);box-shadow:none;margin-bottom:0;}
+
+  /* ---- しつもんと こたえ ---- */
+  .askitem{background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:20px;
+           padding:13px 15px;margin-bottom:12px;box-shadow:var(--inset),var(--lift-sm)}
+  .askitem.waiting{border-color:rgba(201,146,43,.6)}
+  .askhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--soft)}
+  .askhead .anm{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:14px;color:var(--ink)}
+  .askhead .ini{width:26px;height:26px;flex:none;border-radius:50%;color:#fff;display:grid;place-items:center;
+                font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:12px;
+                background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 55%),linear-gradient(180deg,#3E82BC,#1F5580);
+                border:1px solid rgba(255,255,255,.5)}
+  .askhead .akind{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:11.5px;color:#2B6CA3;
+                  padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid var(--edge-soft)}
+  .askhead .awhen{margin-left:auto;font-size:11.5px;font-variant-numeric:tabular-nums}
+  .aq{font-size:13.5px;line-height:1.75;color:var(--ink2);margin-top:8px;word-break:break-word}
+  .aq .aop{color:var(--soft);font-size:12px}
+  .aa{margin-top:9px;padding:11px 13px;border-radius:14px;font-size:13.5px;line-height:1.75;color:var(--ink);
+      background:rgba(255,255,255,.74);border-left:4px solid #3F8F63;white-space:pre-wrap;word-break:break-word}
+  .aa.none{color:var(--soft);font-size:12.5px;border-left-color:#C9922B;font-style:italic}
+  .aa .alab{display:block;font-size:11px;color:var(--soft);letter-spacing:.08em;margin-bottom:3px}
   </style>
 </head>
 <body>
@@ -354,6 +374,9 @@
 
 
 
+
+    <h2 class="subhead">先生からの しつもんと こたえ</h2>
+    <div id="askHost"></div>
 
     <h2 class="subhead">アップされた 写真</h2>
     <div class="upbox">
@@ -742,7 +765,7 @@ async function loadBoard(){
 
 function startAuto(){
   stopAuto();
-  timer = setInterval(function(){ loadBoard(); loadPhotos(); }, CONFIG.refreshMs);
+  timer = setInterval(function(){ loadBoard(); loadPhotos(); loadAsks(); }, CONFIG.refreshMs);
 }
 function stopAuto(){ if (timer){ clearInterval(timer); timer = null; } }
 document.addEventListener("visibilitychange", function(){
@@ -793,6 +816,7 @@ async function boot(){
   try {
     await loadTitle();
     await loadBoard();
+    await loadAsks();
     await loadPhotos();
     if ($("main").style.display !== "none"){
       opened = true;
@@ -994,6 +1018,70 @@ async function deleteOpinion(id){
   if (r.res.ok && r.data && r.data.ok) return true;
   toast((r.data && r.data.error) || "けせませんでした", true);
   return false;
+}
+
+/* =========================================================
+   v16.1：先生からの しつもんと、子どもが 書いた こたえ
+   ・先生が おくった しつもん（理由を きく／詳しく お願いする）と
+     子どもが 書いた こたえを、この 画面で 見られるように する。
+   ・先生には sid を わたさない。しつもんは 「意見の 番号」で ひもづく。
+   ========================================================= */
+let asks = [];
+
+function askKindLabel(k){ return k === "detail" ? "詳しく お願いする" : "理由を きく"; }
+
+/** その しつもんが どの 意見に ついてか（盤面の データから さがす）。 */
+function opinionOf(subId){
+  const n = Number(subId) || 0;
+  if (!n) return "";
+  for (let i = 0; i < clusters.length; i++){
+    const rs = clusters[i].reasons || [];
+    for (let j = 0; j < rs.length; j++){
+      if (Number(rs[j].id) === n) return String(rs[j].opinion || "");
+    }
+  }
+  return "";
+}
+
+function renderAsks(){
+  const host = $("askHost");
+  if (!host) return;
+  if (!asks.length){
+    host.innerHTML = '<div class="gridempty">まだ しつもんは ありません。<br>「まる」をおして 名前をおすと、その人に 「理由を きく」「詳しく お願いする」を おくれます。こたえは ここに 出ます。</div>';
+    return;
+  }
+  const scrollTop = host.scrollTop;
+  let html = "";
+  asks.forEach(function(a){
+    const when = String(a.created_at || "").slice(5, 16).replace("T", " ");
+    const done = Number(a.answered) === 1;
+    const op = opinionOf(a.submission_id);
+    html += '<div class="askitem' + (done ? "" : " waiting") + '">'
+      + '<div class="askhead">'
+      + '<span class="ini">' + esc(initial(a.name)) + '</span>'
+      + '<span class="anm">' + esc(a.name) + '</span>'
+      + '<span class="akind">' + esc(askKindLabel(a.kind)) + '</span>'
+      + '<span class="awhen">' + esc(when) + '</span>'
+      + '</div>'
+      + '<div class="aq">' + esc(a.text)
+      + (op ? '<div class="aop">（意見：' + esc(op) + '）</div>' : '')
+      + '</div>'
+      + (done
+          ? '<div class="aa"><span class="alab">こたえ</span>' + esc(a.answer) + '</div>'
+          : '<div class="aa none">まだ こたえを まっています…</div>')
+      + '</div>';
+  });
+  host.innerHTML = html;
+  host.scrollTop = scrollTop;
+}
+
+async function loadAsks(){
+  try {
+    const r = await api("/api/ask");
+    if (!r.res.ok) return;
+    asks = (r.data && r.data.asks) || [];
+    renderAsks();
+  } catch (e) {}
 }
 
 </script>

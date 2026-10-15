@@ -255,7 +255,14 @@
   .stopmark{display:flex;align-items:center;gap:11px;font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:17px;color:#A62F19;margin-bottom:6px;}
   .stopmark svg{flex:none;}
   .lbl .opt{font-weight:400;font-size:11.5px;color:var(--soft);margin-left:5px;letter-spacing:0;}
-  </style>
+  
+  /* ---- v17：入力の ま上に 出る 見出し（〇〇の 歴史） ---- */
+  .topic{
+    margin:0 0 16px;padding:0 0 13px;border-bottom:1px solid rgba(27,38,49,.10);
+    font-family:'Zen Maru Gothic','Zen Kaku Gothic New',sans-serif;font-weight:900;
+    font-size:22px;line-height:1.5;letter-spacing:.02em;color:#1B2631;word-break:break-word;
+  }
+</style>
 </head>
 <body>
 <div class="deco" id="deco"></div>
@@ -295,6 +302,7 @@
   <!-- 入力フォーム -->
   <section class="card" id="formCard" style="display:none">
     <div id="formBody">
+      <h2 class="topic" id="topicHead">歴史</h2>
       <div class="field">
         <div class="lbl">
           <span class="num">1</span>
@@ -409,6 +417,7 @@ async function loadTheme(){
     if (t) themeText = t + "の 歴史";
   } catch (e) {}
   $("themeText").textContent = themeText;
+  var _tp = $("topicHead"); if (_tp) _tp.textContent = themeText;
   document.title = "まる意見｜" + themeText;
 }
 
