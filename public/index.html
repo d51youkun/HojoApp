@@ -309,7 +309,7 @@
           <span class="t">意見</span>
           <span class="sub"><span id="c1">0</span> / <span id="m1">60</span> 字</span>
         </div>
-        <textarea id="opinion" rows="2" enterkeyhint="enter" autocomplete="off"></textarea>
+        <textarea id="opinion" rows="2" enterkeyhint="enter" autocomplete="off" placeholder="ここに 意見を 書いてね"></textarea>
       </div>
       <div class="field reason">
         <div class="lbl">
@@ -415,6 +415,9 @@ async function loadTheme(){
     const r = await api("/api/theme");
     const t = (r.data && r.data.theme) || "";
     if (t) themeText = t + "の 歴史";
+    // 「1 意見」の 入力らんの うすい 案内に、見出しの ことばを 入れる
+    const _op = $("opinion");
+    if (_op && t) _op.placeholder = "ここに " + themeText + "の 意見を 書いてね";
   } catch (e) {}
   $("themeText").textContent = themeText;
   var _tp = $("topicHead"); if (_tp) _tp.textContent = themeText;
