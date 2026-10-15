@@ -181,13 +181,20 @@ export async function sidCookie(env, sid) {
 
 /* ---------- 先生の 合言葉 ---------- */
 
+/* v16.3：先生ページは 合言葉なしで ひらく（ようへいさんの 指示）。
+   管理者（ADMIN_PASS）は これまでどおり 合言葉が いる。
+   ここを false に もどすと、また 合言葉が ひつように なる。 */
+export const TEACHER_OPEN = true;
+
 export function checkPass(env, input) {
+  if (TEACHER_OPEN) return true; // 先生は 合言葉なし
   const pass = String(env.TEACHER_PASS || "").trim();
   if (!pass) return true; // 合言葉を 決めていない ときは ひらいておく
   return sameText(pass, String(input || "").trim());
 }
 
 export async function isTeacher(request, env) {
+  if (TEACHER_OPEN) return true; // 先生は 合言葉なし
   const pass = String(env.TEACHER_PASS || "").trim();
   if (!pass) return true;
   if (!env.SESSION_SECRET) return false;

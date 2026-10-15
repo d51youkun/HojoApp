@@ -344,7 +344,7 @@
 
   <section class="center" id="gateCard" style="display:none">
     <h2 id="gateTitle">先生用の 画面です</h2>
-    <p id="gateMsg">合言葉を 入れると、みんなの 意見と 写真が 見られます。</p>
+    <p id="gateMsg">みんなの 意見と 写真が 見られます。</p>
     <input class="passtxt" id="pass" type="password" placeholder="合言葉" autocomplete="off">
     <button class="go" id="goBtn" type="button">ひらく</button>
     <div id="gateNotice"></div>
@@ -776,17 +776,33 @@ document.addEventListener("visibilitychange", function(){
 /* ---------- 画面 ---------- */
 let opened = false;
 
+/* v16.3：合言葉なしで ひらく。この カードは「つながらない とき」の おしらせ だけ。 */
+const OPEN_NO_PASS = true;
+
 function showGate(msg){
   opened = false;
   $("main").style.display = "none";
   $("gateCard").style.display = "block";
   $("gateNotice").innerHTML = msg ? '<div class="notice errbox">' + esc(msg) + '</div>' : "";
-  $("pass").focus();
+  if (OPEN_NO_PASS){
+    $("pass").style.display = "none";
+    $("goBtn").style.display = "none";
+    $("gateTitle").textContent = "読みこめませんでした";
+    $("gateMsg").textContent = "つながりませんでした。ページを ひらきなおしてね。";
+  } else {
+    $("pass").focus();
+  }
 }
 
 function setWho(label){
   const box = $("whoBox");
   if (!label){ box.innerHTML = ""; return; }
+  if (OPEN_NO_PASS){
+    // 合言葉なしなので、「とじる」は いらない
+    box.innerHTML = '<span class="nm"></span>';
+    box.querySelector(".nm").textContent = label;
+    return;
+  }
   box.innerHTML = '<span class="nm"></span><button class="linkbtn" id="logoutBtn" type="button">とじる</button>';
   box.querySelector(".nm").textContent = label;
   $("logoutBtn").addEventListener("click", async function(){
