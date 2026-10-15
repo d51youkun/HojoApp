@@ -80,10 +80,17 @@ export async function onRequestGet({ request, env }) {
     })
     .sort((a, b) => b.posts - a.posts || b.count - a.count || String(a.label).localeCompare(String(b.label), "ja"));
 
-  // 先生には sid（アカウントの かぎ）を わたさない。見るだけなので ひつようない。
+  // 先生には sid（アカウントの かぎ）を わたさない。sid は /api/restore で
+  // 「その人に なりすまされる」かぎ なので、先生の 合言葉が もれた ときの ために かくす。
+  // かわりに「意見の 番号（id）」を わたす。先生は その番号で 「しつもん」「けす」が できる。
   if (!admin) {
     clusters.forEach((c) => {
-      (c.members || []).forEach((m) => { delete m.sid; });
+      (c.members || []).forEach((m) => {
+        const mine = (c.reasons || []).filter((r) => String(r.sid) === String(m.sid));
+        const latest = mine.reduce((a, b) => Math.max(a, Number(b.id) || 0), 0);
+        delete m.sid;
+        m.id = latest || null;
+      });
       (c.reasons || []).forEach((r) => { delete r.sid; });
     });
   }

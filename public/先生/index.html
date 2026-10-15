@@ -272,6 +272,41 @@
   .rs.none{color:var(--soft);font-style:italic}
   .gridempty{padding:40px 20px;text-align:center;color:var(--soft);font-size:13px;line-height:2;
              background:linear-gradient(180deg,var(--glass-hi),var(--glass-lo));border:1px solid var(--edge);border-radius:20px;box-shadow:var(--inset),var(--lift-sm)}
+
+  /* ---- 名前をおしたら 出る「どうする？」 ---- */
+  .row.tap{cursor:pointer;border-radius:14px;transition:background .14s;}
+  .row.tap:hover{background:rgba(255,255,255,.62);}
+  .row.tap:focus-visible{outline:3px solid rgba(43,108,163,.45);outline-offset:2px;}
+  .sheetwrap{
+    position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;padding:18px;
+    background:rgba(12,28,44,.34);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    animation:fadein .16s ease-out;
+  }
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .sheet{
+    width:100%;max-width:420px;padding:18px;border-radius:26px;
+    background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.88));
+    border:1px solid var(--edge);box-shadow:var(--inset),0 24px 60px rgba(12,28,44,.28);
+    animation:slideup .22s cubic-bezier(.2,.9,.3,1.15);
+  }
+  @keyframes slideup{from{transform:translateY(26px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .sheet .shead{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:17px;margin:4px 4px 14px;}
+  .act{
+    display:block;width:100%;text-align:left;margin-bottom:10px;padding:14px 16px;cursor:pointer;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:15px;color:var(--ink);
+    border-radius:18px;border:1px solid var(--edge-soft);
+    background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.66));
+    box-shadow:var(--inset),0 4px 12px rgba(12,28,44,.08);
+    transition:transform .12s,box-shadow .12s,filter .12s;
+  }
+  .act span{display:block;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:500;font-size:12px;color:var(--soft);margin-top:4px;line-height:1.6;}
+  .act:hover{filter:brightness(1.02);}
+  .act:active{transform:translateY(2px);}
+  .act:disabled{opacity:.7;cursor:default;}
+  .act.danger{color:#8C2C17;border-color:rgba(239,182,170,.95);background:linear-gradient(180deg,#fff,rgba(253,236,233,.9));}
+  .act.danger[data-arm="1"]{background:linear-gradient(180deg,#C8492E,#A62F19);color:#fff;border-color:rgba(255,255,255,.4);}
+  .act.danger[data-arm="1"] span{color:rgba(255,255,255,.88);}
+  .act.cancel{color:var(--soft);box-shadow:none;margin-bottom:0;}
   </style>
 </head>
 <body>
@@ -306,7 +341,7 @@
 
     <div class="board">
       <div class="boardhead">
-        <div class="t">同じ意見ほど、まるが大きい <span><b>まるの大きさ＝意見の かず</b>（「5こ」＝その意見が 5こ おくられた）。まるをおすと 名前と理由が見られるよ</span></div>
+        <div class="t">同じ意見ほど、まるが大きい <span><b>まるの大きさ＝意見の かず</b>（「5こ」＝その意見が 5こ おくられた）。まるをおすと 名前と理由が見られるよ。<b>名前をおすと「どうする？」が ひらくよ</b></span></div>
         <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
       </div>
       <div class="boardbody">
@@ -595,18 +630,21 @@ function drawPanel(){
   html += '<div class="list">';
   if (activeTab === "people"){
     c.members.forEach(function(m){
-      html += '<div class="row">'
-        + '<div class="ini">' + esc(initial(m.name)) + '</div>'
+      const tap = m.id ? ' tap' : '';
+      html += '<div class="row' + tap + '" data-sub="' + esc(String(m.id == null ? "" : m.id)) + '" data-name="' + esc(m.name) + '"'
+        + (m.id ? ' title="おすと「どうする？」が ひらく" tabindex="0"' : '')
+        + '><div class="ini">' + esc(initial(m.name)) + '</div>'
         + '<div class="body"><div class="nm"><span>' + esc(m.name) + '</span></div>'
         + '</div>'
         + '</div>';
     });
   } else {
     c.reasons.forEach(function(r){
-      html += '<div class="row">'
+      html += '<div class="row tap" data-sub="' + esc(String(r.id)) + '" data-name="' + esc(r.name) + '" title="おすと「どうする？」が ひらく" tabindex="0">'
         + '<div class="ini">' + esc(initial(r.name)) + '</div>'
         + '<div class="body">'
         + '<div class="nm"><span>' + esc(r.name) + '</span>'
+        + '<button class="del" data-id="' + esc(String(r.id)) + '" type="button" aria-label="この意見をけす">けす</button>'
         + '</div>'
         + (String(r.reason || "").trim()
             ? '<div class="rs">' + esc(r.reason) + '</div>'
@@ -622,6 +660,38 @@ function drawPanel(){
     btn.addEventListener("click", function(){
       activeTab = btn.getAttribute("data-tab");
       drawPanel();
+    });
+  });
+
+  // 名前（の行）をおすと「どうする？」が ひらく
+  Array.prototype.forEach.call(panel.querySelectorAll(".row.tap"), function(row){
+    const open = function(){ openActions(row.getAttribute("data-name"), row.getAttribute("data-sub")); };
+    row.addEventListener("click", function(ev){
+      if (ev.target && ev.target.classList && ev.target.classList.contains("del")) return;
+      open();
+    });
+    row.addEventListener("keydown", function(ev){
+      if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); open(); }
+    });
+  });
+
+  // 「けす」は 2回おして はじめて けれる（まちがえて けさないように）
+  Array.prototype.forEach.call(panel.querySelectorAll(".del"), function(btn){
+    btn.addEventListener("click", async function(ev){
+      ev.stopPropagation();
+      if (btn.getAttribute("data-arm") !== "1"){
+        btn.setAttribute("data-arm", "1");
+        btn.textContent = "ほんとに？";
+        btn.classList.add("arm");
+        setTimeout(function(){
+          if (btn.isConnected){ btn.removeAttribute("data-arm"); btn.textContent = "けす"; btn.classList.remove("arm"); }
+        }, 4000);
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "けしてる…";
+      if (await deleteOpinion(btn.getAttribute("data-id"))){ toast("1つ けしたよ"); await loadBoard(); }
+      else { btn.disabled = false; btn.textContent = "けす"; btn.removeAttribute("data-arm"); btn.classList.remove("arm"); }
     });
   });
 
@@ -848,6 +918,83 @@ document.getElementById("pfile").addEventListener("change", async function(){
     toast("この 写真は つかえませんでした（大きすぎ かも）", true); st.textContent = "";
   }
 });
+
+/* =========================================================
+   v16：名前をおすと「どうする？」が ひらく（先生）
+   ・理由を きく ／ 詳しく お願いする  … その人に しつもんを おくる
+   ・この意見を けす                     … その 1つだけ 消す（2回おしで けってい）
+   アカウントを 止めるのと アカウント削除は 先生には わたさない（/管理者/ だけ）。
+   先生には sid を わたしていないので、しつもんも けすのも
+   「意見の 番号（id）」で おこなう。
+   ========================================================= */
+function openActions(name, subId){
+  const old = document.getElementById("actSheet");
+  if (old) old.remove();
+
+  const n = Number(subId) || 0;
+  const box = document.createElement("div");
+  box.className = "sheetwrap";
+  box.id = "actSheet";
+  box.innerHTML =
+    '<div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(name) + ' さんを どうする？">'
+    + '<div class="shead">' + esc(name) + ' さんを どうする？</div>'
+    + '<button class="act" data-act="reason" type="button">理由を きく<span>なぜ そう 思ったのか、もういちど 聞きます</span></button>'
+    + '<button class="act" data-act="detail" type="button">詳しく お願いする<span>もっと 詳しく 説明して もらいます</span></button>'
+    + (n ? '<button class="act danger" data-act="del" type="button">この意見を けす<span>この 1つだけ 消します（もどせません）</span></button>' : '')
+    + '<button class="act cancel" data-act="cancel" type="button">やめる</button>'
+    + '</div>';
+  document.body.appendChild(box);
+  box.addEventListener("click", function(ev){ if (ev.target === box) box.remove(); });
+  const close = function(){ box.remove(); };
+
+  Array.prototype.forEach.call(box.querySelectorAll(".act"), function(btn){
+    btn.addEventListener("click", async function(){
+      const act = btn.getAttribute("data-act");
+      if (act === "cancel"){ close(); return; }
+
+      if (act === "reason" || act === "detail"){
+        if (btn.disabled) return;
+        btn.disabled = true;
+        const before = btn.innerHTML;
+        btn.textContent = "おくってる…";
+        const r = await api("/api/ask", { method:"POST", body: JSON.stringify({ submission_id: n, kind: act }) });
+        if (r.res.ok && r.data && r.data.ok){ toast(name + " さんに おくったよ"); close(); await loadBoard(); }
+        else { toast((r.data && r.data.error) || "おくれませんでした", true); btn.disabled = false; btn.innerHTML = before; }
+        return;
+      }
+
+      if (act === "del"){
+        if (btn.getAttribute("data-arm") !== "1"){
+          btn.setAttribute("data-arm", "1");
+          btn.innerHTML = "ほんとに けす？<span>もういちど おすと 消えます</span>";
+          setTimeout(function(){
+            if (btn.isConnected){
+              btn.removeAttribute("data-arm");
+              btn.innerHTML = 'この意見を けす<span>この 1つだけ 消します（もどせません）</span>';
+            }
+          }, 4000);
+          return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = "けしてる…";
+        const ok = await deleteOpinion(n);
+        if (ok){ toast("1つ けしたよ"); close(); await loadBoard(); }
+        else {
+          btn.disabled = false;
+          btn.innerHTML = 'この意見を けす<span>この 1つだけ 消します（もどせません）</span>';
+          btn.removeAttribute("data-arm");
+        }
+      }
+    });
+  });
+}
+
+async function deleteOpinion(id){
+  const r = await api("/api/submission", { method:"DELETE", body: JSON.stringify({ id: Number(id) }) });
+  if (r.res.ok && r.data && r.data.ok) return true;
+  toast((r.data && r.data.error) || "けせませんでした", true);
+  return false;
+}
 
 </script>
 </body>
