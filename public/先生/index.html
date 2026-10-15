@@ -327,6 +327,37 @@
       background:rgba(255,255,255,.74);border-left:4px solid #3F8F63;white-space:pre-wrap;word-break:break-word}
   .aa.none{color:var(--soft);font-size:12.5px;border-left-color:#C9922B;font-style:italic}
   .aa .alab{display:block;font-size:11px;color:var(--soft);letter-spacing:.08em;margin-bottom:3px}
+
+  /* ---- 全画面（プロジェクターに 大きく 出す） ---- */
+  .headright{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .fsbtn{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:12.5px;color:var(--ink2);
+    padding:7px 15px;border-radius:999px;
+    background:rgba(255,255,255,.66);border:1px solid var(--edge-soft);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 2px 8px rgba(12,28,44,.08);
+    transition:background .14s,transform .12s,color .14s;
+  }
+  .fsbtn:hover{background:#fff;color:var(--blue);}
+  .fsbtn:active{transform:translateY(1px);}
+  .fsbtn:focus-visible{outline:3px solid rgba(43,108,163,.45);outline-offset:2px;}
+  html.fsfix, html.fsfix body{overflow:hidden;height:100%;}
+  .board.wide{
+    position:fixed;inset:0;z-index:80;margin:0;border-radius:0;border:none;
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#FFFFFF 0%,#EAF2F9 100%);
+    box-shadow:none;
+  }
+  .board.wide::after{opacity:.2;}
+  .board.wide .boardhead{padding:12px 20px;}
+  .board.wide .boardbody{flex:1;min-height:0;}
+  .board.wide .canvas{display:flex;align-items:center;justify-content:center;padding:10px 16px;min-height:0;}
+  .board.wide svg.scene{width:100%;height:100%;}
+  .board.wide .canvas-empty{align-self:center;}
+  .board.wide .panel{overflow-y:auto;}
+  .board.wide .list{max-height:none;}
+  .board.wide .fsbtn{color:#fff;background:rgba(43,108,163,.9);border-color:rgba(255,255,255,.4);}
+  .fsnote{font-size:11.5px;color:var(--soft);margin-left:4px;}
   </style>
 </head>
 <body>
@@ -362,7 +393,10 @@
     <div class="board">
       <div class="boardhead">
         <div class="t">同じ意見ほど、まるが大きい <span><b>まるの大きさ＝意見の かず</b>（「5こ」＝その意見が 5こ おくられた）。まるをおすと 名前と理由が見られるよ。<b>名前をおすと「どうする？」が ひらくよ</b></span></div>
-        <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
+        <div class="headright">
+          <div class="live"><span class="dot"></span><span id="liveTxt">じどうで こうしん中</span></div>
+          <button class="fsbtn" id="fsBtn" type="button" title="この ばんめんを 画面いっぱいに 出します">全画面</button>
+        </div>
       </div>
       <div class="boardbody">
         <div class="canvas" id="canvas"></div>
@@ -752,9 +786,11 @@ async function loadBoard(){
   $("sCount").textContent = d.total;
   $("sClusters").textContent = d.clusterCount;
   $("sTime").textContent = new Date(d.updatedAt).toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-  $("liveTxt").textContent = d.method === "ai-llm"
-    ? "AIが いみで まとめ中"
-    : (d.method === "ai" ? "AIで まとめ中（にている度 " + d.threshold + "）" : "文字で まとめ中");
+  $("liveTxt").textContent = d.total === 0
+    ? "まだ 意見が ないよ"
+    : (d.method === "ai-llm"
+        ? "AIが いみで まとめ中"
+        : (d.method === "ai" ? "AIで まとめ中（にている度 " + d.threshold + "）" : "文字で まとめ中"));
 
   render();
   drawPanel();
@@ -1105,6 +1141,77 @@ async function loadAsks(){
     renderAsks();
   } catch (e) {}
 }
+
+/* =========================================================
+   全画面（プロジェクターに 大きく 出す）
+   ・「全画面」ボタン → ブラウザの 全画面。つかえない ときは
+     画面を おおう やり方（CSS）で 同じ 見た目に する。
+   ・もどすのは 「もどす」ボタンか Esc。
+   ========================================================= */
+function boardEl(){ return document.querySelector(".board"); }
+
+function fsInfo(){
+  const el = boardEl();
+  const on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  return { board: el, real: on, wide: !!(el && el.classList.contains("wide")) };
+}
+
+function setWide(on){
+  const el = boardEl();
+  if (el) el.classList.toggle("wide", !!on);
+  document.documentElement.classList.toggle("fsfix", !!on);
+  const btn = $("fsBtn");
+  if (btn) btn.textContent = on ? "もどす" : "全画面";
+  render();
+  drawPanel();
+}
+
+async function toggleFull(){
+  const i = fsInfo();
+  if (!i.board) return;
+  if (!i.real && !i.wide){
+    const api = i.board.requestFullscreen || i.board.webkitRequestFullscreen || i.board.msRequestFullscreen;
+    if (api){
+      try {
+        await api.call(i.board);
+        setWide(true);
+        return;
+      } catch (e) { /* つかえない → 下の やり方へ */ }
+    }
+    setWide(true);
+    return;
+  }
+  if (i.real){
+    try {
+      const ex = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (ex) await ex.call(document);
+    } catch (e) {}
+    setWide(false);
+    return;
+  }
+  setWide(false);
+}
+
+function onFsChange(){
+  const i = fsInfo();
+  setWide(i.real);
+}
+document.addEventListener("fullscreenchange", onFsChange);
+document.addEventListener("webkitfullscreenchange", onFsChange);
+document.addEventListener("keydown", function(e){
+  const i = fsInfo();
+  if (e.key === "Escape" && i.wide && !i.real) setWide(false);
+});
+
+function bindFull(){
+  const btn = $("fsBtn");
+  if (btn && !btn.getAttribute("data-bound")){
+    btn.setAttribute("data-bound", "1");
+    btn.addEventListener("click", toggleFull);
+  }
+}
+bindFull();
+window.addEventListener("load", bindFull);
 
 </script>
 </body>
