@@ -8,7 +8,10 @@
 // だから先生画面を何回リロードしても、AIを呼ぶのは「新しい意見が来たとき」だけ。
 
 export const EMBED_MODEL = "@cf/baai/bge-m3";
-export const DEFAULT_THRESHOLD = 0.8;
+// 0.80 は 実測で 「わかれすぎ」だった（同じ いみの 短い 意見でも 0.80に とどかず、
+// まるが 1つも まとまらなかった）。10この 意見で はかって 0.70 に した。
+// 0.70では ちがう いみの 意見が くっつかなかった（いちばん 高い ちがうペアが 0.690）。
+export const DEFAULT_THRESHOLD = 0.7;
 
 /** 意見が「変わったかどうか」を見るための キー */
 export function opinionKey(text) {

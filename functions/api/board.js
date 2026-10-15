@@ -12,6 +12,7 @@ import { json, fail, isAdmin, isTeacher } from "../_lib/auth.js";
 import { clusterize, medoidLabel } from "../_lib/cluster.js";
 import { ensureVectors } from "../_lib/vectorstore.js";
 import { clusterByVectors, medoidByVectors, DEFAULT_THRESHOLD } from "../_lib/ai.js";
+import { cachedGroups, saveGroups, groupByLLM } from "../_lib/aigroups.js";
 
 export async function onRequestGet({ request, env }) {
   const admin = await isAdmin(request, env);
@@ -32,22 +33,60 @@ export async function onRequestGet({ request, env }) {
   const byBigram = () =>
     clusterize(items).map((g) => ({ label: medoidLabel(g), members: g }));
 
+  // 番号（submissions.id）から 意見を ひく ための 表
+  const byId = new Map(items.map((it) => [String(it.id), it]));
+  const fromLLM = (list) =>
+    list
+      .map((g) => ({
+        label: String(g.label || ""),
+        members: (g.ids || []).map((id) => byId.get(String(id))).filter(Boolean),
+      }))
+      .filter((g) => g.members.length > 0);
+
+  /** 2だんめ：意味の ベクトルで まとめる */
+  const byVectors = async () => {
+    threshold = Number(env.SIMILARITY_THRESHOLD || DEFAULT_THRESHOLD);
+    if (!(threshold > 0 && threshold <= 1)) threshold = DEFAULT_THRESHOLD;
+    // 0.80 は 実測で わかれすぎ（何も まとまらない）だったので あつかわない
+    if (Math.abs(threshold - 0.8) < 1e-9) threshold = DEFAULT_THRESHOLD;
+
+    const vectors = await ensureVectors(env, items);
+    groups = clusterByVectors(items, vectors, threshold).map((g) => ({
+      label: medoidByVectors(g, vectors),
+      members: g.map((x) => x.item),
+    }));
+    method = "ai";
+  };
+
   if (items.length > 0) {
     if (env.AI) {
+      // 1だんめ：AI（LLM）が 意味ごとに まとめて、見出しも つくる
       try {
-        threshold = Number(env.SIMILARITY_THRESHOLD || DEFAULT_THRESHOLD);
-        if (!(threshold > 0 && threshold <= 1)) threshold = DEFAULT_THRESHOLD;
-
-        const vectors = await ensureVectors(env, items);
-        groups = clusterByVectors(items, vectors, threshold).map((g) => ({
-          label: medoidByVectors(g, vectors),
-          members: g.map((x) => x.item),
-        }));
-        method = "ai";
+        const c = await cachedGroups(env, items);
+        if (c.groups) {
+          groups = fromLLM(c.groups);
+          method = "ai-llm";
+        } else {
+          const g = await groupByLLM(env, items);
+          if (g && g.length) {
+            groups = fromLLM(g);
+            method = "ai-llm";
+            await saveGroups(env, c.key, g);
+          }
+        }
       } catch (err) {
-        note = String((err && err.message) || err);
-        groups = byBigram();
-        method = "bigram";
+        note = "llm:" + String((err && err.message) || err);
+      }
+
+      // 2だんめ：ベクトル。3だんめ：文字。
+      if (method === "none") {
+        try {
+          await byVectors();
+        } catch (err) {
+          note = (note ? note + " / " : "") + String((err && err.message) || err);
+          groups = byBigram();
+          method = "bigram";
+        }
       }
     } else {
       note = "ai_binding_missing";

@@ -726,9 +726,9 @@ async function loadBoard(){
   $("sCount").textContent = d.total;
   $("sClusters").textContent = d.clusterCount;
   $("sTime").textContent = new Date(d.updatedAt).toLocaleTimeString("ja-JP", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
-  $("liveTxt").textContent = d.method === "ai"
-    ? "AIで まとめ中（にている度 " + d.threshold + "）"
-    : "文字で まとめ中";
+  $("liveTxt").textContent = d.method === "ai-llm"
+    ? "AIが いみで まとめ中"
+    : (d.method === "ai" ? "AIで まとめ中（にている度 " + d.threshold + "）" : "文字で まとめ中");
 
   render();
   drawPanel();
